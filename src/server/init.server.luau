@@ -14,7 +14,10 @@ do
     -- to interact with any services
     for _, service in script:GetChildren() do
         root.services[service.Name] = require(service)
-        root.services[service.Name]:Init() -- assume every service has an Init
+         if root.debug then
+            root.services[service.Name].debug = true
+         end
+        root.services[service.Name]:Init(root) -- assume every service has an Init
     end
     
     if root.debug then

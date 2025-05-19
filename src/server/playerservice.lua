@@ -8,6 +8,8 @@ local PlayerService = {}
 
 PlayerService.players = {}
 PlayerService.events = {}
+PlayerService.context = nil
+PlayerService.debug = false
 
 --- Private Variables ---
 local InternalEvents = {}
@@ -17,7 +19,16 @@ local function PlayerJoining(player: Player)
     local self = PlayerService
     
     -- register player via their id
-    self.players[player.UserId] = player
+    self.players[player.UserId] = {
+        playerObject = player,
+        connections = {},
+    }
+
+    -- debug purposes
+    if self.debug then
+        print(`Registering {player.Name}`)
+        print(self.players)
+    end
 
     -- after work is done, fire emote
     self.events.playerJoining:Fire(player)
@@ -32,16 +43,24 @@ local function PlayerLeaving(player: Player)
         self.players[player.UserId] = nil
     end
 
-        -- after work is done, fire emote
+    -- debug purposes
+    if self.debug then
+        print(`De-registering {player.Name}`)
+        print(self.players)
+    end
+
+    -- after work is done, fire emote
     self.events.playerLeaving:Fire(player)
 end
 
 --- Public Functions ---
-function PlayerService:Init()
+function PlayerService:Init(context)
 
     -- these events will fire after playerservice does its work with their individual players
     self.events.playerJoining = Instance.new("BindableEvent")
     self.events.playerLeaving = Instance.new("BindableEvent")
+
+    self.context = context
 
 end
 
