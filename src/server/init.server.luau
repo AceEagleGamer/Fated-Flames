@@ -12,25 +12,37 @@ do
 
     -- register services into the table. might be useful if other scripts want
     -- to interact with any services
+    debug.profilebegin('Indexing Services')
     for _, service in script:GetChildren() do
-        root.services[service.Name] = require(service)
-         if root.debug then
-            root.services[service.Name].debug = true
-         end
-        root.services[service.Name]:Init(root) -- assume every service has an Init
+        local serviceMod = require(service)
+        if root.debug then
+            serviceMod.debug = true
+        end
+        
+        local ServiceDataType = {
+            name = service.Name,
+            payload = serviceMod
+        }
+
+        if serviceMod.loadPriority then
+            root.services[serviceMod.loadPriority] = ServiceDataType
+        else
+            table.insert(root.services, ServiceDataType)
+        end
+    end
+    debug.profileend()
+
+    -- initialize then start the services based on priority. This sucks but i dont care
+    for i = 1, #script:GetChildren() do
+        local service = root.services[i]
+        
+        debug.profilebegin(service.name)
+        service.payload:Init(root)
+        service.payload:Start()
+        debug.profileend()
     end
     
     if root.debug then
         print(`{#script:GetChildren()} services loaded in {tick() - initTick}s`)
-    end
-
-    -- start each service
-    initTick = tick()
-    for _, service in root.services do
-        service:Start() -- assume every service has a Start
-    end
-
-    if root.debug then
-        print(`{#script:GetChildren()} services started in {tick() - initTick}s`)
     end
 end
