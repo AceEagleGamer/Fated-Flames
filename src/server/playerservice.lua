@@ -51,7 +51,6 @@ local function PlayerLeaving(player: Player)
 
     -- after work is done, fire emote
     self.events.playerLeaving:Fire(player)
-    
 end
 
 --- Public Functions ---
