@@ -1,0 +1,3 @@
+local InputController = {}
+
+return InputController
