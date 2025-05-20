@@ -10,7 +10,17 @@ dependencies = []
 [[package]]
 name = "acexo/fated-flames"
 version = "0.1.0"
-dependencies = [["profilestore", "2jammers/profilestore@0.1.0"], ["rodux", "roblox/rodux@3.0.0"]]
+dependencies = [["cmdr", "evaera/cmdr@1.12.0"], ["profilestore", "2jammers/profilestore@0.1.0"], ["promise", "evaera/promise@4.0.0"], ["rodux", "roblox/rodux@3.0.0"]]
+
+[[package]]
+name = "evaera/cmdr"
+version = "1.12.0"
+dependencies = []
+
+[[package]]
+name = "evaera/promise"
+version = "4.0.0"
+dependencies = []
 
 [[package]]
 name = "roblox/rodux"

@@ -2,25 +2,37 @@
 
 --- References ---
 local players = game:GetService("Players")
+--local ProfileStore = require(game:GetService("ReplicatedStorage").Packages.profilestore)
 
 --- Public Variables ---
 local PlayerService = {}
 
 PlayerService.players = {}
+PlayerService.connections = {}
 PlayerService.events = {}
 PlayerService.context = nil
 PlayerService.debug = false
 
 --- Private Variables ---
-local InternalEvents = {}
+local InternalEvents = {
+    PlayerJoining = nil,
+    PlayerLeaving = nil -- these are to shut up Luau errors lol
+}
 
 --- Private Functions ---
+local function LoadPlayerData(player: Player)
+    -- TODO: this please lol
+
+    player:SetAttribute("DataLoaded", true)
+end
+
 local function PlayerJoining(player: Player)
     local self = PlayerService
     
     -- register player via their id
     self.players[player.UserId] = {
-        playerObject = player,
+        player_object = player,
+        character_model = nil,
         connections = {},
     }
 
@@ -30,8 +42,11 @@ local function PlayerJoining(player: Player)
         print(self.players)
     end
 
+    -- load data
+    LoadPlayerData(player)
+
     -- after work is done, fire emote
-    self.events.playerJoining:Fire(player)
+    InternalEvents.PlayerJoining:Fire(player)
 end
 
 local function PlayerLeaving(player: Player)
@@ -50,27 +65,27 @@ local function PlayerLeaving(player: Player)
     end
 
     -- after work is done, fire emote
-    self.events.playerLeaving:Fire(player)
-
+    InternalEvents.PlayerLeaving:Fire(player)
 end
 
 --- Public Functions ---
 function PlayerService:Init(context)
 
     -- these events will fire after playerservice does its work with their individual players
-    self.events.playerJoining = Instance.new("BindableEvent")
-    self.events.playerLeaving = Instance.new("BindableEvent")
+    InternalEvents.PlayerJoining = Instance.new("BindableEvent")
+    InternalEvents.PlayerLeaving = Instance.new("BindableEvent")
+    self.events.playerJoining = InternalEvents.PlayerJoining.Event
+    self.events.playerLeaving = InternalEvents.PlayerLeaving.Event
 
     self.context = context
 
-    print(self.context)
+    -- register with roblox's events
+    players.PlayerAdded:Connect(PlayerJoining)
+    players.PlayerRemoving:Connect(PlayerLeaving)
 end
 
 function PlayerService:Start()
 
-    -- register with roblox's events
-    InternalEvents.playerJoining = players.PlayerAdded:Connect(PlayerJoining)
-    InternalEvents.playerLeaving = players.PlayerRemoving:Connect(PlayerLeaving)
 end
 
 return PlayerService

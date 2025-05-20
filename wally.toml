@@ -7,4 +7,6 @@ realm = "server"
 [dependencies]
 rodux = "roblox/rodux@3.0.0"
 profilestore = "2jammers/profilestore@0.1.0"
+cmdr = "evaera/cmdr@1.12.0"
+promise = "evaera/promise@4.0.0"
 
