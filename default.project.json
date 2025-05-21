@@ -9,6 +9,9 @@
       },
       "Packages": {
         "$path": "Packages"
+      },
+      "Moves": {
+        "$path": "Moves"
       }
     },
 

@@ -12,8 +12,12 @@ local root = {}
 root.debug = true
 root.services = {}
 
+root.playerValues = {}
+
 -- wait for data to load
 repeat task.wait() until Player:GetAttribute("DataLoaded") == true -- bad but wtv
+
+-- TODO: Load data stuff here
 
 do
     local initTick = tick()
@@ -29,7 +33,7 @@ do
     end
 
     if root.debug then
-        print(`[CLIENT] Services loaded in {tick() - initTick()}s`)
+        print(`[CLIENT] Services loaded in {tick() - initTick}s`)
     end
 
     initTick = tick()
@@ -38,7 +42,7 @@ do
     end
 
     if root.debug then
-        print(`[CLIENT] Services started in {tick() - initTick()}s`)
+        print(`[CLIENT] Services started in {tick() - initTick}s`)
     end
 end
 
