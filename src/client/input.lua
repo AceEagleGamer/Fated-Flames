@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 --- References ---
 local player = game.Players.LocalPlayer
 local cas = game:GetService("ContextActionService")
@@ -20,10 +21,20 @@ function Input:Init(context)
 
     -- TODO: load actual bindings here
     Input.bindings.MouseButton1 = "fist"
+=======
+local Input = {}
+
+Input.context = nil
+
+function Input:Init(context)
+    self.context = context
+    
+>>>>>>> main
 end
 
 function Input:Start()
 
+<<<<<<< HEAD
     -- test i guess
      for key, move in self.bindings do
         -- get the move module
@@ -51,6 +62,8 @@ function Input:Start()
         -- why
         self.connections[key][move] = cas:BindAction(`{key}{move}`, moveMod.Work, false, if moveMod.IsKey then Enum.KeyCode[key] else Enum.UserInputType[key])
      end
+=======
+>>>>>>> main
 end
 
 return Input
