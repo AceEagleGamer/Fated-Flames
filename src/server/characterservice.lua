@@ -14,11 +14,6 @@ CharacterService.connections = {}
 CharacterService.context = nil
 
 --- Private Functions ---
-
-local function LoadCharacter(player: Player)
-
-end
-
 local function onCharacterAdded(player: Player, char: Model)
 
     -- get the player data table
@@ -28,6 +23,11 @@ local function onCharacterAdded(player: Player, char: Model)
     if not player_info then
         player:Kick("On Character Added: Something went wrong initializing your player. Please rejoin")
     end
+
+    -- set posture
+    -- TODO: edit it based on data values or smth
+    char:SetAttribute("Posture", 50)
+    
 
     -- set up events
     local hum = char:WaitForChild("Humanoid")
