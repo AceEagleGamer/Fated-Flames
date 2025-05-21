@@ -5,8 +5,10 @@ local root = {}
 root.services = {}
 root.debug = true
 
-do
+root.settings = {}
+root.respawnTimer = 1
 
+do
     -- for debug purposes
     local initTick = tick()
 

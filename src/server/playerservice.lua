@@ -2,6 +2,9 @@
 
 --- References ---
 local players = game:GetService("Players")
+local rep = game:GetService("ReplicatedStorage")
+local events = rep.Events
+local packages = rep.Packages
 --local ProfileStore = require(game:GetService("ReplicatedStorage").Packages.profilestore)
 
 --- Public Variables ---
@@ -52,16 +55,16 @@ end
 local function PlayerLeaving(player: Player)
     local self = PlayerService
 
+    -- debug purposes
+    if self.debug then
+        print(self.players)
+        print(`De-registering {player.Name}`)
+    end
+
     -- find the registered player
     local check_player = self.players[player.UserId]
     if check_player then
         self.players[player.UserId] = nil
-    end
-
-    -- debug purposes
-    if self.debug then
-        print(`De-registering {player.Name}`)
-        print(self.players)
     end
 
     -- after work is done, fire emote
