@@ -41,8 +41,8 @@ local function PlayerJoining(player: Player)
 
     -- debug purposes
     if self.debug then
-        print(`Registering {player.Name}`)
-        print(self.players)
+        print(`[PlayerService] Registering {player.Name}`)
+        --print(self.players)
     end
 
     -- load data
@@ -57,8 +57,8 @@ local function PlayerLeaving(player: Player)
 
     -- debug purposes
     if self.debug then
-        print(self.players)
-        print(`De-registering {player.Name}`)
+        --print(self.players)
+        print(`[PlayerService] De-registering {player.Name}`)
     end
 
     -- find the registered player

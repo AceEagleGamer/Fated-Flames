@@ -9,6 +9,7 @@ local packages = rep.Packages
 --- Public Variables ---
 local CharacterService = {}
 
+CharacterService.debug = false
 CharacterService.events = {}
 CharacterService.connections = {}
 CharacterService.context = nil
