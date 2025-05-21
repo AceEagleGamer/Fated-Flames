@@ -6,6 +6,9 @@ local rep = game:GetService("ReplicatedStorage")
 local events = rep.Events
 local packages = rep.Packages
 
+--- Private Variables ---
+local servicesToLoadAfterCharacter = {}
+
 --- Public Variables ---
 local root = {}
 
@@ -37,8 +40,12 @@ do
     end
 
     initTick = tick()
-    for _, service in root.services do
-        service:Start()
+    for serviceName, service in root.services do
+        if not service.LoadAfterCharacterLoads then
+            service:Start()
+        else
+            table.insert(servicesToLoadAfterCharacter, serviceName)
+        end
     end
 
     if root.debug then
@@ -48,3 +55,22 @@ end
 
 -- let the server know we've loaded
 events.PlayerLoaded:FireServer()
+Player:GetAttributeChangedSignal("CharacterLoaded"):Wait()
+
+-- load the rest
+do
+    local initTick = tick()
+    for _, serviceName in servicesToLoadAfterCharacter do
+
+        -- find the service
+        local service = root.services[serviceName]
+        if not service then warn(`how did you index {service} when it doesnt exist`); continue end
+
+        -- start it NOW
+        service:Start()
+    end
+
+        if root.debug then
+        print(`[CLIENT] Additional services started in {tick() - initTick}s`)
+    end
+end

@@ -30,9 +30,17 @@ local function onCharacterAdded(player: Player, char: Model)
         player:Kick("On Character Added: Something went wrong initializing your player. Please rejoin")
     end
 
+    -- set up attributes
+    char:SetAttribute("Blocking", false)
+    char:SetAttribute("Stunned", false)
+    char:SetAttribute("StunImmunity", false)
+
+    char:SetAttribute("Posture", 50)
+
     -- set up events
     local hum = char:WaitForChild("Humanoid")
     player_info.connections.playerDied = hum.Died:Connect(function()
+        player:SetAttribute("CharacterLoaded", false)
         -- reset connections
         player_info.connections.playerDied:Disconnect()
 
@@ -42,6 +50,8 @@ local function onCharacterAdded(player: Player, char: Model)
 
         -- initiate the respawn
         task.wait(context.respawnTimer)
+
+        player:SetAttribute("CharacterLoaded", true)
         player:LoadCharacter()
     end)
 end
@@ -86,7 +96,7 @@ function CharacterService:Init(context)
         InitialLoadCharacter(player) -- this should hopefully yield
 
         -- fire some events for the player to know that we've loaded in
-        
+        player:SetAttribute("CharacterLoaded", true)
     end)
 end
 
