@@ -25,19 +25,12 @@ local function onCharacterAdded(player: Player, char: Model)
         player:Kick("On Character Added: Something went wrong initializing your player. Please rejoin")
     end
 
-<<<<<<< HEAD
     -- set up attributes
     char:SetAttribute("Blocking", false)
     char:SetAttribute("Stunned", false)
     char:SetAttribute("StunImmunity", false)
 
     char:SetAttribute("Posture", 50)
-=======
-    -- set posture
-    -- TODO: edit it based on data values or smth
-    char:SetAttribute("Posture", 50)
-    
->>>>>>> main
 
     -- set up events
     local hum = char:WaitForChild("Humanoid")

@@ -14,7 +14,6 @@ local root = {}
 
 root.debug = true
 root.services = {}
-<<<<<<< HEAD
 
 root.playerValues = {}
 
@@ -52,14 +51,6 @@ do
     if root.debug then
         print(`[CLIENT] Services started in {tick() - initTick}s`)
     end
-=======
-
--- wait for data to load
-repeat task.wait() until Player:GetAttribute("DataLoaded") == true -- bad but wtv
-
-do
-    local initTick
->>>>>>> main
 end
 
 -- let the server know we've loaded
