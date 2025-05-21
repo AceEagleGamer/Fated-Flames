@@ -9,14 +9,14 @@ local packages = rep.Packages
 --- Public Variables ---
 local root = {}
 
+root.debug = true
 root.services = {}
-root.controllers = {}
 
 -- wait for data to load
-repeat task.wait() until Player:GetAttribute("DataLoaded") == true
+repeat task.wait() until Player:GetAttribute("DataLoaded") == true -- bad but wtv
 
 do
-
+    local initTick
 end
 
 -- let the server know we've loaded

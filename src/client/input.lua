@@ -1,3 +1,14 @@
-local InputController = {}
+local Input = {}
 
-return InputController
+Input.context = nil
+
+function Input:Init(context)
+    self.context = context
+    
+end
+
+function Input:Start()
+
+end
+
+return Input
