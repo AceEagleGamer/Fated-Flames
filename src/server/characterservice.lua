@@ -18,18 +18,16 @@ CharacterService.charFolder = nil
 --- Private Functions ---
 local function onCharacterAdded(player: Player, char: Model)
 
-    -- wait for the character appearance to load?
+    -- wait for the character appearance to load
     player.CharacterAppearanceLoaded:Wait()
 
     -- set player parts to not interact with physics queries
-    task.defer(function()
-        for _, part in char:GetDescendants() do
-            if part:IsA("BasePart") then
-                part.CanQuery = false
-                part.CanTouch = false
-            end
+    for _, part in char:GetDescendants() do
+        if part:IsA("BasePart") then
+            part.CanQuery = false
+            part.CanTouch = false
         end
-    end)
+    end
 
     -- get the player data table
     local context = CharacterService.context
