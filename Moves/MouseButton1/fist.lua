@@ -4,6 +4,7 @@
 --- References ---
 local rep = game:GetService("ReplicatedStorage")
 local moveAnims = rep.MoveAnims
+local moveSFX = rep.MoveSFX
 local events = rep.Events
 
 --- Public Variables ---
@@ -12,13 +13,16 @@ MoveData.comboString = 0
 
 MoveData.properties = {
     cooldown = 0.5,
-    endCD = 1
+    endCD = 1.5,
+    comboStringReset = 1.5
 }
 
 MoveData.IsKey = false
 MoveData.animations = {}
+MoveData.sounds = {}
 MoveData.player = nil
 MoveData.free = true
+MoveData.lastSwing = 0
 
 --- Public Functions ---
 function MoveData:ResetDefaults()
@@ -34,6 +38,12 @@ function MoveData:GetCooldown() -- just in case there are "complex" behaviors to
 end
 
 function MoveData:Tick()
+    -- reset combo string if we're over the timing window
+    if tick() - self.lastSwing >= self.properties.comboStringReset then
+        self.comboString = 0
+    end
+    self.lastSwing = tick()
+
     if self.comboString == 4 then self.comboString = 0 end -- reset
     self.comboString += 1
 end
@@ -52,21 +62,36 @@ function MoveData:Init(player: Player)
     for _, anim in anims do
         self.animations[anim.Name] = animator:LoadAnimation(anim)
     end
+
+    -- index sounds
+    local sounds = moveSFX.MouseButton1.fist:GetChildren()
+    for _, sound in sounds do
+        self.sounds[sound.Name] = sound
+    end
 end
 
-MoveData.Work = function(_, inputState, _inputObj)
-    if not MoveData.free then return end
-    MoveData.free = false
+function MoveData:Work(_, inputState, _inputObj)
+    if not self.free then return end
+    self.free = false
+
     if inputState == Enum.UserInputState.Begin then
          
         -- request the server for a move
         local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name) -- takes move folder and move name, returns true or false
         if moveGranted then
-            MoveData:Tick()
+            self:Tick()
+
+            -- stop previous anim (idk if this does anything)
+            if self.animations[`hit{self.comboString - 1}`] then self.animations[`hit{self.comboString - 1}`]:Stop() end
             
+            -- play anim
+            self.animations[`hit{self.comboString}`]:Play()
+
+            -- play sound
+            self.sounds[`hit{self.comboString}`]:Play()
         end
     end
-    MoveData.free = true
+    self.free = true
 end
 
 return MoveData

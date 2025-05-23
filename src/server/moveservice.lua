@@ -31,7 +31,7 @@ local function CheckCD(player: Player, moveFolder: string, moveName: string)
 
     -- get move module
     local moveData = require(moves[moveFolder]:FindFirstChild(moveName))
-    local moveCD = moveData:GetCooldown()
+    local moveCD = moveData:GetCooldown() - 0.1 -- to make it more lenient i guess
 
     -- check CD timings
     if tick() - playerMoveCD < moveCD then warn(`[MoveService] {player.Name} requesting a move under cooldown`); return false end

@@ -44,7 +44,7 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
     Input.CDTable[`{moveFolder}/{moveName}`] = tick()
 
     -- run the move module
-    moveMod.Work(actionName, inputState, _inputObj)
+    moveMod:Work(actionName, inputState, _inputObj)
 end
 
 --- Public Functions ---
@@ -70,8 +70,8 @@ function Input:Start()
         self.moveModules[`{key}/{move}`] = require(moveMod)
         moveMod = self.moveModules[`{key}/{move}`]
         
-        moveMod:Init(player)
         moveMod:ResetDefaults()
+        moveMod:Init(player)
         
         -- bind it via context action service
         if self.connections[key] == nil then -- catch for nil. create the table ourselves
