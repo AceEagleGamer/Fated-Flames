@@ -13,9 +13,23 @@ CharacterService.debug = false
 CharacterService.events = {}
 CharacterService.connections = {}
 CharacterService.context = nil
+CharacterService.charFolder = nil
 
 --- Private Functions ---
 local function onCharacterAdded(player: Player, char: Model)
+
+    -- wait for the character appearance to load?
+    player.CharacterAppearanceLoaded:Wait()
+
+    -- set player parts to not interact with physics queries
+    task.defer(function()
+        for _, part in char:GetDescendants() do
+            if part:IsA("BasePart") then
+                part.CanQuery = false
+                part.CanTouch = false
+            end
+        end
+    end)
 
     -- get the player data table
     local context = CharacterService.context
@@ -24,6 +38,9 @@ local function onCharacterAdded(player: Player, char: Model)
     if not player_info then
         player:Kick("On Character Added: Something went wrong initializing your player. Please rejoin")
     end
+
+    -- re-parent the character
+    char.Parent = CharacterService.charFolder
 
     -- set up attributes
     char:SetAttribute("Blocking", false)
@@ -77,6 +94,11 @@ end
 function CharacterService:Init(context)
 
     self.context = context
+
+    -- create the playercharacters folder
+    local cFolder = Instance.new("Folder", workspace)
+    cFolder.Name = "PlayerCharacters"
+    self.charFolder = cFolder
 
     self.connections.playerLoaded = events.PlayerLoaded.OnServerEvent:Connect(function(player: Player)
         player:SetAttribute("ClientLoaded", true)

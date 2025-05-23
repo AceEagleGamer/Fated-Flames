@@ -84,10 +84,8 @@ function MoveData:Work(_, inputState, _inputObj)
             -- stop previous anim (idk if this does anything)
             if self.animations[`hit{self.comboString - 1}`] then self.animations[`hit{self.comboString - 1}`]:Stop() end
             
-            -- play anim
+            -- play vfx stuff
             self.animations[`hit{self.comboString}`]:Play()
-
-            -- play sound
             self.sounds[`hit{self.comboString}`]:Play()
         end
     end

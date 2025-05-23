@@ -15,7 +15,7 @@ MoveService.connections = {}
 MoveService.playerCDs = {}
 
 --- Private Functions ---
-local function CheckCD(player: Player, moveFolder: string, moveName: string)
+local function EvaluateRequest(player: Player, moveFolder: string, moveName: string)
 
     -- sanity checks
     if not moves:FindFirstChild(moveFolder) then return false end
@@ -37,7 +37,8 @@ local function CheckCD(player: Player, moveFolder: string, moveName: string)
     if tick() - playerMoveCD < moveCD then warn(`[MoveService] {player.Name} requesting a move under cooldown`); return false end
     playerTable[`{moveFolder}{moveName}`] = tick()
     moveData:Tick()
-    print(`combo string: {moveData.comboString}, cooldown: {moveCD}`)
+
+    -- let other player
     
     return true
 end
@@ -53,7 +54,7 @@ function MoveService:Start()
     local PlayerService = context.services.playerservice
 
     -- not sure if i can store this callback in a table. wtv
-    events.RequestMove.OnServerInvoke = CheckCD
+    events.RequestMove.OnServerInvoke = EvaluateRequest
 
     self.connections.playerLoaded = PlayerService.events.playerJoining:Connect(function(player: Player)
         
