@@ -11,7 +11,8 @@ local MoveData = {}
 MoveData.comboString = 0
 
 MoveData.properties = {
-    cooldown = 0.5
+    cooldown = 0.5,
+    endCD = 1
 }
 
 MoveData.IsKey = false
@@ -29,7 +30,7 @@ function MoveData:ResetDefaults()
 end
 
 function MoveData:GetCooldown() -- just in case there are "complex" behaviors to the move i guess
-    return self.properties.cooldown
+    return if self.comboString == 4 then self.properties.endCD else self.properties.cooldown
 end
 
 function MoveData:Tick()
@@ -57,9 +58,13 @@ MoveData.Work = function(_, inputState, _inputObj)
     if not MoveData.free then return end
     MoveData.free = false
     if inputState == Enum.UserInputState.Begin then
-        
+         
         -- request the server for a move
-        local request = events.RequestMove:InvokeServer()
+        local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name) -- takes move folder and move name, returns true or false
+        if moveGranted then
+            MoveData:Tick()
+            
+        end
     end
     MoveData.free = true
 end

@@ -14,6 +14,9 @@ Input.bindings = {}
 Input.connections = {}
 Input.moveModules = {}
 
+--- Private Function ---
+
+
 --- Public Functions ---
 function Input:Init(context)
     self.context = context
@@ -49,7 +52,7 @@ function Input:Start()
         end
         
         -- why
-        self.connections[key][move] = cas:BindAction(`{key}{move}`, moveMod.Work, false, if moveMod.IsKey then Enum.KeyCode[key] else Enum.UserInputType[key])
+        self.connections[key][move] = cas:BindAction(`{key}/{move}`, moveMod.Work, false, if moveMod.IsKey then Enum.KeyCode[key] else Enum.UserInputType[key])
      end
 end
 

@@ -4,7 +4,7 @@
 --- References ---
 local rep = game:GetService("ReplicatedStorage")
 local events = rep.Events
-local packages = rep.Packages
+local _packages = rep.Packages
 
 --- Public Variables ---
 local CharacterService = {}
@@ -77,11 +77,16 @@ end
 function CharacterService:Init(context)
 
     self.context = context
-    local PlayerService = context.services.playerservice
 
     self.connections.playerLoaded = events.PlayerLoaded.OnServerEvent:Connect(function(player: Player)
         player:SetAttribute("ClientLoaded", true)
     end)
+end
+
+function CharacterService:Start()
+
+    local context = self.context
+    local PlayerService = context.services.playerservice
 
     self.connections.playerJoined = PlayerService.events.playerJoining:Connect(function(player: Player)
         
@@ -93,10 +98,6 @@ function CharacterService:Init(context)
         -- fire some events for the player to know that we've loaded in
         player:SetAttribute("CharacterLoaded", true)
     end)
-end
-
-function CharacterService:Start()
-
 end
 
 return CharacterService
