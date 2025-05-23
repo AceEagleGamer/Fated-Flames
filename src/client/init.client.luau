@@ -4,7 +4,7 @@
 local Player = game.Players.LocalPlayer
 local rep = game:GetService("ReplicatedStorage")
 local events = rep.Events
-local packages = rep.Packages
+--local packages = rep.Packages
 
 --- Private Variables ---
 local servicesToLoadAfterCharacter = {}

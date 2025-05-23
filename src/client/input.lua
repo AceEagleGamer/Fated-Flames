@@ -13,9 +13,39 @@ Input.LoadAfterCharacterLoads = true
 Input.bindings = {}
 Input.connections = {}
 Input.moveModules = {}
+Input.CDTable = {}
 
 --- Private Function ---
+local function EvaluateMoveInput(actionName, inputState, _inputObj)
 
+    if inputState ~= Enum.UserInputState.Begin then return end
+
+    -- get move
+    local parseMoveName = string.split(actionName, '/')
+    local moveFolder = parseMoveName[1]
+    local moveName = parseMoveName[2]
+
+    -- check if it exists
+    if not moves:FindFirstChild(moveFolder) then return end
+    if not moves[moveFolder]:FindFirstChild(moveName) then return end
+
+    -- check if we have a move module recorded
+    local moveMod = Input.moveModules[`{moveFolder}/{moveName}`]
+    if not moveMod then warn(`{moveFolder}/{moveName} does not have a valid move module`); return end
+
+    -- check if we have a valid CD table
+    if not Input.CDTable[`{moveFolder}/{moveName}`] then
+        Input.CDTable[`{moveFolder}/{moveName}`] = 0
+    end
+
+    -- check if we're off cooldown
+    local cd = moveMod:GetCooldown()
+    if tick() - Input.CDTable[`{moveFolder}/{moveName}`] < cd then return end
+    Input.CDTable[`{moveFolder}/{moveName}`] = tick()
+
+    -- run the move module
+    moveMod.Work(actionName, inputState, _inputObj)
+end
 
 --- Public Functions ---
 function Input:Init(context)
@@ -37,11 +67,8 @@ function Input:Start()
         if not moveMod then warn(`{move} does not exist in {key}`); continue end
 
         -- initialize the move module
-        if self.moveModules[key] == nil then -- catch for nil. create the table ourselves
-            self.moveModules[key] = {}
-        end
-        self.moveModules[key][move] = require(moveMod)
-        moveMod = self.moveModules[key][move]
+        self.moveModules[`{key}/{move}`] = require(moveMod)
+        moveMod = self.moveModules[`{key}/{move}`]
         
         moveMod:Init(player)
         moveMod:ResetDefaults()
@@ -52,7 +79,7 @@ function Input:Start()
         end
         
         -- why
-        self.connections[key][move] = cas:BindAction(`{key}/{move}`, moveMod.Work, false, if moveMod.IsKey then Enum.KeyCode[key] else Enum.UserInputType[key])
+        self.connections[`{key}/{move}`] = cas:BindAction(`{key}/{move}`, EvaluateMoveInput, false, if moveMod.IsKey then Enum.KeyCode[key] else Enum.UserInputType[key])
      end
 end
 
