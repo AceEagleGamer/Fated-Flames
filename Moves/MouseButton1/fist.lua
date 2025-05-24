@@ -121,7 +121,11 @@ function MoveData:Work(_, inputState, _inputObj)
             task.delay(hitboxProperty.timing, function()
                 local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
-                print(hits)
+
+                -- clientside hits
+                
+                -- do serverside things
+                events.Hit:FireServer(hits, `{script.Parent.Name}/{script.Name}`)
             end)
         end
     end

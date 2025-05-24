@@ -38,14 +38,39 @@ local function EvaluateRequest(player: Player, moveFolder: string, moveName: str
     playerTable[`{moveFolder}{moveName}`] = tick()
     moveData:Tick()
 
-    -- let other player
+    -- update lastmove and lastmovetick
+    playerTable.lastMove = `{moveFolder}{moveName}`
+    playerTable.lastMoveTick = tick()
+
+    -- replication here
     
     return true
+end
+
+local function EvaluateHit(player: Player, hitTable: {[any]: any?}, rawMoveName)
+
+    -- get move data
+    local moveIdentifier = string.split(rawMoveName, '/')
+    local moveFolder = moveIdentifier[1]
+    local moveName = moveIdentifier[2]
+
+    -- sanity check
+    if not moves:FindFirstChild(moveFolder) then return end
+    if not moves[moveFolder]:FindFirstChild(moveName) then return end
+
+    -- TODO: security checks. just hit them here doesnt matter
+    for _, hit in hitTable do
+
+        hit:FindFirstChild("Humanoid"):TakeDamage(5)
+
+    end
 end
 
 --- Public Functions ---
 function MoveService:Init(context)
     self.context = context
+
+    self.connections.hitRequest = events.Hit.OnServerEvent:Connect(EvaluateHit)
 end
 
 function MoveService:Start()
@@ -62,7 +87,10 @@ function MoveService:Start()
         player:GetAttributeChangedSignal("ClientLoaded"):Wait()
 
         -- register records to player CDs
-        self.playerCDs[player.UserId] = {}
+        self.playerCDs[player.UserId] = {
+            lastMove = "nil",
+            lastMoveTick = 0
+        }
     end)
 
     self.connections.playerLeft = PlayerService.events.playerLeaving:Connect(function(player: Player)
