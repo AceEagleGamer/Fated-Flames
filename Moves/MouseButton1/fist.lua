@@ -3,9 +3,14 @@
 
 --- References ---
 local rep = game:GetService("ReplicatedStorage")
+local shared = rep.Shared
+
 local moveAnims = rep.MoveAnims
 local moveSFX = rep.MoveSFX
 local events = rep.Events
+
+--- Packages ---
+local hitbox = require(shared.hitbox)
 
 --- Public Variables ---
 local MoveData = {}
@@ -15,6 +20,29 @@ MoveData.properties = {
     cooldown = 0.5,
     endCD = 1.5,
     comboStringReset = 1.5
+}
+
+MoveData.HitboxProperties = {
+    hit1 = {
+        timing = 0.25,
+        cframe = CFrame.new(0,0,-2.5),
+        size = Vector3.new(4,4,5)
+    },
+    hit2 = {
+        timing = 0.25,
+        cframe = CFrame.new(0,0,-2.5),
+        size = Vector3.new(4,4,5)
+    },
+    hit3 = {
+        timing = 0.25,
+        cframe = CFrame.new(0,0,-2.5),
+        size = Vector3.new(4,4,5)
+    },
+    hit4 = {
+        timing = 0.25,
+        cframe = CFrame.new(0,0,-2.5),
+        size = Vector3.new(4,4,5)
+    },
 }
 
 MoveData.IsKey = false
@@ -87,6 +115,14 @@ function MoveData:Work(_, inputState, _inputObj)
             -- play vfx stuff
             self.animations[`hit{self.comboString}`]:Play()
             self.sounds[`hit{self.comboString}`]:Play()
+            
+            -- hitbox stuff
+            local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
+            task.delay(hitboxProperty.timing, function()
+                local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
+                hits = hitbox:FilterSelf(self.player.Character, hits)
+                print(hits)
+            end)
         end
     end
     self.free = true

@@ -23,9 +23,13 @@ local function onCharacterAdded(player: Player, char: Model)
 
     -- set player parts to not interact with physics queries
     for _, part in char:GetDescendants() do
-        if part:IsA("BasePart") then
+        if part.Parent:IsA("Accessory") then
             part.CanQuery = false
             part.CanTouch = false
+        end
+
+        if part:IsA("BasePart") then
+            part.CollisionGroup = "Players"
         end
     end
 
