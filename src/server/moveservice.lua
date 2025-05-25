@@ -43,6 +43,7 @@ local function EvaluateRequest(player: Player, moveFolder: string, moveName: str
     playerTable.lastMoveTick = tick()
 
     -- replication here
+    events.Replicate:FireAllClients(player, moveFolder, moveName)
     
     return true
 end
