@@ -76,9 +76,10 @@ function MoveData:Tick()
     self.comboString += 1
 end
 
-function MoveData:Init(player: Player)
+function MoveData:Init(player: Player, context)
     if not player.Character then warn(`[MoveData] Waiting for character`); player.CharacterAdded:Wait(); return end
 
+    self.context = context
     self.player = player
     -- index some important stuff
     local char = player.Character
@@ -102,6 +103,8 @@ function MoveData:Work(_, inputState, _inputObj)
     if not self.free then return end
     self.free = false
 
+    local core = self.context.services.core
+
     if inputState == Enum.UserInputState.Begin then
          
         -- request the server for a move
@@ -119,13 +122,11 @@ function MoveData:Work(_, inputState, _inputObj)
             -- hitbox stuff
             local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
             task.delay(hitboxProperty.timing, function()
-                local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
+                local hits = hitbox:Evaluate(core.currentServerCFramePrediction * hitboxProperty.cframe, hitboxProperty.size, true)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
 
                 -- clientside hits
-                
-                -- do serverside things
-                events.Hit:FireServer(hits, `{script.Parent.Name}/{script.Name}`)
+                core:PlayHit(hits)
             end)
         end
     end

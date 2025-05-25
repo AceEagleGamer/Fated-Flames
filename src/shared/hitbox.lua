@@ -1,6 +1,7 @@
 -- idk
 local Hitbox = {}
 local rep = game:GetService("ReplicatedStorage")
+local run = game:GetService("RunService")
 local debugHitbox = rep.DebugHitbox
 
 function Hitbox:Evaluate(cframe: CFrame, size: Vector3, isDebug: boolean)
@@ -16,6 +17,9 @@ function Hitbox:Evaluate(cframe: CFrame, size: Vector3, isDebug: boolean)
         new.CFrame = cframe
         new.Size = size
         new.Parent = workspace.DebugFolder
+
+        new.Color = if run:IsServer() then Color3.new(0,1,0) else Color3.new(0,0,1)
+        new.Color = if run:IsServer() then Color3.new(0,1,0) else Color3.new(0,0,1)
 
         game:GetService("Debris"):AddItem(new, 1)
     end

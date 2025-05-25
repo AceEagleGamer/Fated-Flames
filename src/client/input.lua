@@ -3,7 +3,7 @@ local player = game.Players.LocalPlayer
 local cas = game:GetService("ContextActionService")
 local run = game:GetService("RunService")
 local rep = game:GetService("ReplicatedStorage")
-local uis = game:GetService("UserInputService")
+--local uis = game:GetService("UserInputService")
 local moves = rep.Moves
 
 --- Public Variables ---
@@ -82,7 +82,7 @@ function Input:Start()
         moveMod = self.moveModules[`{key}/{move}`]
         
         moveMod:ResetDefaults()
-        moveMod:Init(player)
+        moveMod:Init(player, self.context)
         
         -- bind it via context action service
         if self.connections[key] == nil then -- catch for nil. create the table ourselves

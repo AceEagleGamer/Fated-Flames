@@ -1,5 +1,8 @@
 --- References ---
 local rep = game:GetService("ReplicatedStorage")
+local run = game:GetService("RunService")
+local playerService = game:GetService("Players")
+local localPlayer = playerService.LocalPlayer
 
 --- Public Variables ---
 local Core = {}
@@ -8,6 +11,10 @@ Core.context = nil
 Core.connections = {}
 Core.animBlacklist = {}
 Core.playerCons = {}
+
+Core.animCons = {}
+Core.characterAnims = {}
+Core.currentServerCFramePrediction = CFrame.new(0,0,0)
 
 Core.debug = true
 
@@ -20,6 +27,23 @@ local function buildAnimationBlacklist()
 
     if Core.debug then
         print(Core.animBlacklist)
+    end
+end
+
+local function loadHitAnims(char)
+    local animTracks = {}
+    Core.characterAnims[char] = animTracks
+
+    local hum = char:FindFirstChild("Humanoid")
+    if not hum then return end
+
+    local animator = hum:FindFirstChild("Animator")
+    if not animator then return end
+
+    for _, anim: Animation in rep.HitAnims:GetDescendants() do
+        if not anim:IsA("Animation") then continue end
+        animTracks[anim.Name] = animator:LoadAnimation(anim)
+        animTracks.currentlyPlaying = "nil"
     end
 end
 
@@ -38,25 +62,80 @@ local function onPlayerLoaded(player: Player)
     end)
 end
 
+local clientPredictionRootPart = rep.DebugHitbox:Clone()
+clientPredictionRootPart.Size = Vector3.new(2,1,1)
+clientPredictionRootPart.Parent = workspace.DebugFolder
+local function predictServerCFrame(dt)
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local savedCFrame = localPlayer.Character.HumanoidRootPart.CFrame
+
+        local ping = localPlayer:GetNetworkPing()
+        task.wait(ping * 2) -- change back to ping later
+        Core.currentServerCFramePrediction = savedCFrame
+        
+        if debug then
+            clientPredictionRootPart.CFrame = savedCFrame
+        end
+    end
+
+end
+
 --- Public Functions ---
+function Core:PlayHit(hitTable)
+    for _, char in hitTable do
+
+        -- play sound
+        local nSound: Sound = rep.MoveSFX.hitlanded:Clone()
+        nSound.Parent = char.HumanoidRootPart
+        nSound:Play()
+        game:GetService("Debris"):AddItem(nSound, nSound.TimeLength)
+        
+        -- get anim table
+        local animTracks = self.characterAnims[char]
+        if not animTracks then warn(`{char.Name} does not have anim tracks?`); continue end
+
+        -- stop previous anim
+        if animTracks.currentlyPlaying ~= "nil" and animTracks[animTracks.currentlyPlaying].IsPlaying then
+            animTracks[animTracks.currentlyPlaying]:Stop()
+        end
+
+        -- play new anim
+        local chosenAnim = animTracks[`hit{math.random(1,4)}`]
+        chosenAnim:Play()
+        animTracks.currentlyPlaying = chosenAnim.Animation.Name
+
+        chosenAnim.Ended:Connect(function()
+            animTracks.currentlyPlaying = "nil"
+        end)
+    end
+end
+
 function Core:Init(context)
     self.context = context
     buildAnimationBlacklist()
 
     -- for players that joined before us
-    for _, player in game:GetService("Players"):GetPlayers() do
-        --if player == game:GetService("Players").LocalPlayer then continue end
+    for _, player in playerService:GetPlayers() do
+        --if player == playerService.LocalPlayer then continue end
 
         onPlayerLoaded(player)
         if player.Character then
+            loadHitAnims(player.Character)
             self.playerCons[player.UserId].animationPlayed = player.Character:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
         end
     end
+
+    -- for npcs that existed before us
+    for _, npc in workspace.NPCs:GetChildren() do
+        loadHitAnims(npc)
+    end
+
+     -- TODO: create for new NPCs
     
     -- for players joining after us
-    self.connections.playerLoaded = game:GetService("Players").PlayerAdded:Connect(onPlayerLoaded)
+    self.connections.playerLoaded = playerService.PlayerAdded:Connect(onPlayerLoaded)
 
-    self.connections.playerLeft = game:GetService("Players").PlayerRemoving:Connect(function(player: Player)
+    self.connections.playerLeft = playerService.PlayerRemoving:Connect(function(player: Player)
 
         for _, con in self.playerCons[player.UserId] do
             con:Disconnect()
@@ -68,6 +147,8 @@ end
 
 function Core:Start()
 
+    -- client prediction
+    self.playerCons[localPlayer.UserId].serverPrediction = run.Heartbeat:Connect(predictServerCFrame) -- should this be here?
 end
 
 return Core

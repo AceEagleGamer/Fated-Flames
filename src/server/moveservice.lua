@@ -5,6 +5,9 @@ local rep = game:GetService("ReplicatedStorage")
 local events = rep.Events
 local moves = rep.Moves
 
+--- Packages ---
+local hitbox = require(rep.Shared.hitbox)
+
 --- Public Variables ---
 local MoveService = {}
 
@@ -15,7 +18,27 @@ MoveService.connections = {}
 MoveService.playerCDs = {}
 
 --- Private Functions ---
-local function EvaluateRequest(player: Player, moveFolder: string, moveName: string)
+local function EvaluateHit(player: Player, hitTable: {[any]: any?}, rawMoveName)
+
+    -- get move data
+    local moveIdentifier = string.split(rawMoveName, '/')
+    local moveFolder = moveIdentifier[1]
+    local moveName = moveIdentifier[2]
+    print(rawMoveName)
+
+    -- sanity check
+    if not moves:FindFirstChild(moveFolder) then return end
+    if not moves[moveFolder]:FindFirstChild(moveName) then return end
+
+    -- TODO: security checks. just hit them here doesnt matter
+    for _, hit in hitTable do
+
+        hit:FindFirstChild("Humanoid"):TakeDamage(5)
+
+    end
+end
+
+local function EvaluateRequest(player, moveFolder: string, moveName: string)
 
     -- sanity checks
     if not moves:FindFirstChild(moveFolder) then return false end
@@ -39,32 +62,23 @@ local function EvaluateRequest(player: Player, moveFolder: string, moveName: str
     moveData:Tick()
 
     -- update lastmove and lastmovetick
-    playerTable.lastMove = `{moveFolder}{moveName}`
+    playerTable.lastMove = `{moveFolder}/{moveName}`
     playerTable.lastMoveTick = tick()
 
     -- replication here
     events.Replicate:FireAllClients(player, moveFolder, moveName)
+
+    -- queue hit
+    local hitboxProperty = moveData.HitboxProperties[`hit{moveData.comboString}`]
+    task.delay(hitboxProperty.timing, function()
+        local hits = hitbox:Evaluate(player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
+        hits = hitbox:FilterSelf(player.Character, hits)
+
+        -- register hits
+        EvaluateHit(hitboxProperty.player, hits, `{moveFolder}/{moveName}`)
+    end)
     
     return true
-end
-
-local function EvaluateHit(player: Player, hitTable: {[any]: any?}, rawMoveName)
-
-    -- get move data
-    local moveIdentifier = string.split(rawMoveName, '/')
-    local moveFolder = moveIdentifier[1]
-    local moveName = moveIdentifier[2]
-
-    -- sanity check
-    if not moves:FindFirstChild(moveFolder) then return end
-    if not moves[moveFolder]:FindFirstChild(moveName) then return end
-
-    -- TODO: security checks. just hit them here doesnt matter
-    for _, hit in hitTable do
-
-        hit:FindFirstChild("Humanoid"):TakeDamage(5)
-
-    end
 end
 
 --- Public Functions ---
