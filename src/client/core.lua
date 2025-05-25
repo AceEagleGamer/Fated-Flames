@@ -3,6 +3,7 @@ local rep = game:GetService("ReplicatedStorage")
 local run = game:GetService("RunService")
 local playerService = game:GetService("Players")
 local localPlayer = playerService.LocalPlayer
+local events = rep.Events
 
 --- Public Variables ---
 local Core = {}
@@ -43,8 +44,8 @@ local function loadHitAnims(char)
     for _, anim: Animation in rep.HitAnims:GetDescendants() do
         if not anim:IsA("Animation") then continue end
         animTracks[anim.Name] = animator:LoadAnimation(anim)
-        animTracks.currentlyPlaying = "nil"
     end
+    animTracks.currentlyPlaying = "nil"
 end
 
 local function PreventAnimationFromReplicating(anim)
@@ -53,17 +54,26 @@ local function PreventAnimationFromReplicating(anim)
     end
 end
 
-local function onPlayerLoaded(player: Player)
+local function onPlayerLoaded(player)
     Core.playerCons[player.UserId] = {}
 
     Core.playerCons[player.UserId].characterAdded = player.CharacterAdded:Connect(function(char)
-        
         Core.playerCons[player.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
+
+        print("loaded")
+        loadHitAnims(char)
+        
     end)
+
+    if player.Character then
+        Core.playerCons[player.UserId].animationPlayed = player.Character:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
+        print("loaded before con")
+        loadHitAnims(player.Character)
+    end
 end
 
 local clientPredictionRootPart = rep.DebugHitbox:Clone()
-clientPredictionRootPart.Size = Vector3.new(2,1,1)
+clientPredictionRootPart.Size = Vector3.new(2,2,1)
 clientPredictionRootPart.Parent = workspace.DebugFolder
 local function predictServerCFrame(dt)
     if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -116,13 +126,9 @@ function Core:Init(context)
 
     -- for players that joined before us
     for _, player in playerService:GetPlayers() do
-        --if player == playerService.LocalPlayer then continue end
+        if player == playerService.LocalPlayer then continue end
 
         onPlayerLoaded(player)
-        if player.Character then
-            loadHitAnims(player.Character)
-            self.playerCons[player.UserId].animationPlayed = player.Character:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
-        end
     end
 
     -- for npcs that existed before us
@@ -146,6 +152,21 @@ function Core:Init(context)
 end
 
 function Core:Start()
+    Core.playerCons[localPlayer.UserId] = {}
+
+    -- run stuff ourselves
+    localPlayer.CharacterAdded:Connect(function(char)
+       Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
+
+        print('did we load?')
+        loadHitAnims(char)
+    end)
+
+    -- hit replication
+    events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable)
+        if player.Name == localPlayer.Name then return end
+        self:PlayHit(hitTable)
+    end)
 
     -- client prediction
     self.playerCons[localPlayer.UserId].serverPrediction = run.Heartbeat:Connect(predictServerCFrame) -- should this be here?

@@ -2,6 +2,7 @@
 
 --- References ---
 local rep = game:GetService("ReplicatedStorage")
+local playerService = game:GetService("Players")
 local events = rep.Events
 local moves = rep.Moves
 
@@ -24,18 +25,22 @@ local function EvaluateHit(player: Player, hitTable: {[any]: any?}, rawMoveName)
     local moveIdentifier = string.split(rawMoveName, '/')
     local moveFolder = moveIdentifier[1]
     local moveName = moveIdentifier[2]
-    print(rawMoveName)
 
     -- sanity check
     if not moves:FindFirstChild(moveFolder) then return end
     if not moves[moveFolder]:FindFirstChild(moveName) then return end
 
     -- TODO: security checks. just hit them here doesnt matter
+    local playersHit = {}
     for _, hit in hitTable do
 
         hit:FindFirstChild("Humanoid"):TakeDamage(5)
-
+        if playerService:GetPlayerFromCharacter(hit) then
+            table.insert(playersHit, hit)
+        end
     end
+
+    events.ReplicateHit:FireAllClients(player.Name, playersHit)
 end
 
 local function EvaluateRequest(player, moveFolder: string, moveName: string)
@@ -66,7 +71,7 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string)
     playerTable.lastMoveTick = tick()
 
     -- replication here
-    events.Replicate:FireAllClients(player, moveFolder, moveName)
+    events.ReplicateMove:FireAllClients(player, moveFolder, moveName)
 
     -- queue hit
     local hitboxProperty = moveData.HitboxProperties[`hit{moveData.comboString}`]
@@ -75,7 +80,7 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string)
         hits = hitbox:FilterSelf(player.Character, hits)
 
         -- register hits
-        EvaluateHit(hitboxProperty.player, hits, `{moveFolder}/{moveName}`)
+        EvaluateHit(player, hits, `{moveFolder}/{moveName}`)
     end)
     
     return true
@@ -85,7 +90,7 @@ end
 function MoveService:Init(context)
     self.context = context
 
-    self.connections.hitRequest = events.Hit.OnServerEvent:Connect(EvaluateHit)
+    --self.connections.hitRequest = events.Hit.OnServerEvent:Connect(EvaluateHit)
 end
 
 function MoveService:Start()
