@@ -19,7 +19,7 @@ MoveData.comboString = 0
 MoveData.properties = {
     cooldown = 0.5,
     endCD = 1.5,
-    comboStringReset = 1.5
+    comboStringReset = 1
 }
 
 MoveData.HitboxProperties = {
@@ -42,6 +42,12 @@ MoveData.HitboxProperties = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
+
+        endlag = 1.5,
+        endlagConditions = function(hitProperties)
+            return #hitProperties.HitList == 0
+        end,
+
         ragdolls = true
     },
 }
@@ -55,7 +61,6 @@ MoveData.lastSwing = 0
 
 --- Public Functions ---
 function MoveData:ResetDefaults()
-    print("reset defaults")
     self.comboString = 0
     self.properties.cooldown = 0.5
 
@@ -79,7 +84,6 @@ function MoveData:Tick()
 end
 
 function MoveData:Init(player: Player, context)
-    print("initializing")
     if not player.Character then warn(`[MoveData] Waiting for character`); player.CharacterAdded:Wait(); return end
 
     self.context = context
@@ -107,9 +111,9 @@ function MoveData:Work(_, inputState, _inputObj)
     if not self.free then return end
     self.free = false
 
-    print(self.context)
-
     local core = self.context.services.core
+    local playerState = core.playerState
+    if playerState.endlag then return end
 
     if inputState == Enum.UserInputState.Begin then
          
@@ -128,14 +132,28 @@ function MoveData:Work(_, inputState, _inputObj)
             -- hitbox stuff
             local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
             task.delay(hitboxProperty.timing, function()
+                local hitProperties = {}
                 local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
 
                 -- clientside hits
                 core:PlayHit(hits)
 
+                -- fill in hit properties
+                -- evaluate conditions
+                hitProperties.HitList = hits
+
+                -- handle endlag if there is one
+                if hitboxProperty.endlag then
+                    local conditionFulfilled = hitboxProperty.endlagConditions(hitProperties)
+                    if conditionFulfilled then
+                        core:Endlag(hitboxProperty.endlag)
+                    end
+
+                end
+
                 -- serverside stuff
-                events.Hit:FireServer(hits, `{script.Parent.Name}/{script.Name}`)
+                events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`)
             end)
         end
     end

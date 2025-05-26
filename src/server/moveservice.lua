@@ -19,14 +19,18 @@ MoveService.connections = {}
 MoveService.playerCDs = {}
 
 --- Private Functions ---
-local function EvaluateHit(player: Player, hitTable: {[any]: any?}, rawMoveName)
+local function EvaluateHit(player: Player, hitProperties: {[any]: any?}, rawMoveName)
+
+    -- data sanity check
+    if hitProperties.HitList == nil then return end
+    local hitTable = hitProperties.HitList
 
     -- get move data
     local moveIdentifier = string.split(rawMoveName, '/')
     local moveFolder = moveIdentifier[1]
     local moveName = moveIdentifier[2]
 
-    -- sanity check
+    -- move sanity check
     if not moves:FindFirstChild(moveFolder) then return end
     if not moves[moveFolder]:FindFirstChild(moveName) then return end
 

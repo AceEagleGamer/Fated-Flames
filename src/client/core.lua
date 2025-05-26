@@ -15,7 +15,17 @@ Core.playerCons = {}
 
 Core.animCons = {}
 Core.characterAnims = {}
-Core.currentServerCFramePrediction = CFrame.new(0,0,0)
+Core.playerState = {
+    endlag = false,
+    stunned = false,
+    statuses = {},
+
+    originalWalkspeed = 16, -- just set it to this for now
+    originalJumpPower = 50,
+
+    remote = nil,
+    Changed = nil
+}
 
 Core.debug = false
 
@@ -66,11 +76,34 @@ local function onPlayerLoaded(player)
 
     if player.Character then
         Core.playerCons[player.UserId].animationPlayed = player.Character:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
+
         loadHitAnims(player.Character)
     end
 end
 
 --- Public Functions ---
+function Core:Endlag(duration)
+
+    -- sanity check
+    if self.context == nil then return end -- idk why this would happen but just making sure
+    if self.endlag then return end -- this might be cause for concern later down the line. currently i dont care
+
+    -- register endlag
+    self.playerState.endlag = true
+    task.delay(duration, function()
+        self.playerState.endlag = false
+        self.playerState.remote:Fire()
+    end)
+
+    -- fire changed event
+    self.playerState.remote:Fire()
+
+    -- TODO: register to the server
+end
+
+function Core:Stun(duration)
+    -- TODO: this
+end
 function Core:PlayHit(hitTable)
     for _, char in hitTable do
 
@@ -104,6 +137,10 @@ function Core:Init(context)
     self.context = context
     buildAnimationBlacklist()
 
+    -- build player state table
+    self.playerState.remote = Instance.new("BindableEvent")
+    self.playerState.Changed = self.playerState.remote.Event
+
     -- for players that joined before us
     for _, player in playerService:GetPlayers() do
         if player == playerService.LocalPlayer then continue end
@@ -115,6 +152,28 @@ function Core:Init(context)
     for _, npc in workspace.NPCs:GetChildren() do
         loadHitAnims(npc)
     end
+
+    -- LOLAL PLAYHER
+    self.playerCons[localPlayer.UserId] = {}
+
+    -- run stuff ourselves
+    localPlayer.CharacterAdded:Connect(function(char)
+        -- debug
+        -- Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
+
+        loadHitAnims(char)
+    end)
+
+    -- handle endlag/stunned
+    self.playerCons[localPlayer.UserId].playerStateChanged = self.playerState.Changed:Connect(function()
+        if not localPlayer.Character or not localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character.Humanoid.Health <= 0 then return end
+
+        if self.playerState.endlag or self.playerState.stunned then
+            localPlayer.Character:FindFirstChild("Humanoid").WalkSpeed = 0
+        else
+            localPlayer.Character:FindFirstChild("Humanoid").WalkSpeed = self.playerState.originalWalkspeed
+        end
+    end)
 
      -- TODO: create for new NPCs
     
@@ -132,15 +191,6 @@ function Core:Init(context)
 end
 
 function Core:Start()
-    Core.playerCons[localPlayer.UserId] = {}
-
-    -- run stuff ourselves
-    localPlayer.CharacterAdded:Connect(function(char)
-        -- debug
-        -- Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
-
-        loadHitAnims(char)
-    end)
 
     -- hit replication
     events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable)
