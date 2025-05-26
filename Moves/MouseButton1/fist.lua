@@ -41,7 +41,8 @@ MoveData.HitboxProperties = {
     hit4 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5)
+        size = Vector3.new(4,4,5),
+        ragdolls = true
     },
 }
 

@@ -60,14 +60,12 @@ local function onPlayerLoaded(player)
     Core.playerCons[player.UserId].characterAdded = player.CharacterAdded:Connect(function(char)
         Core.playerCons[player.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
 
-        print("loaded")
         loadHitAnims(char)
         
     end)
 
     if player.Character then
         Core.playerCons[player.UserId].animationPlayed = player.Character:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
-        print("loaded before con")
         loadHitAnims(player.Character)
     end
 end
@@ -156,9 +154,8 @@ function Core:Start()
 
     -- run stuff ourselves
     localPlayer.CharacterAdded:Connect(function(char)
-       Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
+        Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
 
-        print('did we load?')
         loadHitAnims(char)
     end)
 
