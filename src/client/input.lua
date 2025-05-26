@@ -24,8 +24,13 @@ Input.holdingM1 = false
 
 --- Private Functions ---
 local function EvaluateMoveInput(actionName, inputState, _inputObj)
-
+    -- only handle if we're at the beginning of an input
     if inputState ~= Enum.UserInputState.Begin then return end
+
+    -- check if our character is alive
+    if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <=0 then return end
+
+    -- dont go if we're stunned or endlagged (is thgat the corect term)
 
     -- get move
     local parseMoveName = string.split(actionName, '/')
@@ -64,10 +69,9 @@ function Input:Init(context)
 
     -- TODO: load actual bindings here
     Input.bindings.MouseButton1 = "fist"
-end
-
-function Input:Start()
-
+    Input.bindings.F = "fistblock"
+    Input.bindings.Q = "fistdash"
+    
     -- test i guess
      for key, move in self.bindings do
         -- get the move module
@@ -80,9 +84,6 @@ function Input:Start()
         -- initialize the move module
         self.moveModules[`{key}/{move}`] = require(moveMod)
         moveMod = self.moveModules[`{key}/{move}`]
-        
-        moveMod:ResetDefaults()
-        moveMod:Init(player, self.context)
         
         -- bind it via context action service
         if self.connections[key] == nil then -- catch for nil. create the table ourselves
@@ -98,6 +99,21 @@ function Input:Start()
             self.M1Properties.moveName = `{key}/{move}`
         end
      end
+
+    -- reset move mods on death
+     self.connections.characterLoaded = player.CharacterAdded:Connect(function(char)
+
+        -- loop through movemods and call ResetDefaults and Init
+        for _, moveMod in self.moveModules do
+
+            moveMod:ResetDefaults()
+            moveMod:Init(player, context)
+        end
+        
+     end)
+end
+
+function Input:Start()
 
      -- m1 loop
      self.connections.m1Loop = run.RenderStepped:Connect(function(dt)

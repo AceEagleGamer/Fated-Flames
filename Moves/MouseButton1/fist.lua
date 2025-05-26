@@ -55,6 +55,7 @@ MoveData.lastSwing = 0
 
 --- Public Functions ---
 function MoveData:ResetDefaults()
+    print("reset defaults")
     self.comboString = 0
     self.properties.cooldown = 0.5
 
@@ -78,10 +79,12 @@ function MoveData:Tick()
 end
 
 function MoveData:Init(player: Player, context)
+    print("initializing")
     if not player.Character then warn(`[MoveData] Waiting for character`); player.CharacterAdded:Wait(); return end
 
     self.context = context
     self.player = player
+
     -- index some important stuff
     local char = player.Character
     local hum = char:WaitForChild("Humanoid")
@@ -103,6 +106,8 @@ end
 function MoveData:Work(_, inputState, _inputObj)
     if not self.free then return end
     self.free = false
+
+    print(self.context)
 
     local core = self.context.services.core
 

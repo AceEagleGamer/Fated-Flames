@@ -55,6 +55,7 @@ local function onCharacterAdded(player: Player, char: Model)
     local hum = char:WaitForChild("Humanoid")
     player_info.connections.playerDied = hum.Died:Connect(function()
         player:SetAttribute("CharacterLoaded", false)
+        char:SetAttribute("Dead", true)
         -- reset connections
         player_info.connections.playerDied:Disconnect()
 

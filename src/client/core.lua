@@ -1,6 +1,6 @@
 --- References ---
 local rep = game:GetService("ReplicatedStorage")
-local run = game:GetService("RunService")
+--local run = game:GetService("RunService")
 local playerService = game:GetService("Players")
 local localPlayer = playerService.LocalPlayer
 local events = rep.Events
@@ -17,7 +17,7 @@ Core.animCons = {}
 Core.characterAnims = {}
 Core.currentServerCFramePrediction = CFrame.new(0,0,0)
 
-Core.debug = true
+Core.debug = false
 
 --- Private Functions ---
 local function buildAnimationBlacklist()
