@@ -70,24 +70,6 @@ local function onPlayerLoaded(player)
     end
 end
 
-local clientPredictionRootPart = rep.DebugHitbox:Clone()
-clientPredictionRootPart.Size = Vector3.new(2,2,1)
-clientPredictionRootPart.Parent = workspace.DebugFolder
-local function predictServerCFrame(dt)
-    if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local savedCFrame = localPlayer.Character.HumanoidRootPart.CFrame
-
-        local ping = localPlayer:GetNetworkPing()
-        task.wait(ping * 2) -- change back to ping later
-        Core.currentServerCFramePrediction = savedCFrame
-        
-        if debug then
-            clientPredictionRootPart.CFrame = savedCFrame
-        end
-    end
-
-end
-
 --- Public Functions ---
 function Core:PlayHit(hitTable)
     for _, char in hitTable do
@@ -166,7 +148,7 @@ function Core:Start()
     end)
 
     -- client prediction
-    self.playerCons[localPlayer.UserId].serverPrediction = run.Heartbeat:Connect(predictServerCFrame) -- should this be here?
+    --self.playerCons[localPlayer.UserId].serverPrediction = run.Heartbeat:Connect(predictServerCFrame) -- should this be here?
 end
 
 return Core

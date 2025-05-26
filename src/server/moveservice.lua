@@ -7,7 +7,7 @@ local events = rep.Events
 local moves = rep.Moves
 
 --- Packages ---
-local hitbox = require(rep.Shared.hitbox)
+--local hitbox = require(rep.Shared.hitbox)
 
 --- Public Variables ---
 local MoveService = {}
@@ -74,14 +74,14 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string)
     events.ReplicateMove:FireAllClients(player, moveFolder, moveName)
 
     -- queue hit
-    local hitboxProperty = moveData.HitboxProperties[`hit{moveData.comboString}`]
+   --[[ local hitboxProperty = moveData.HitboxProperties[`hit{moveData.comboString}`]
     task.delay(hitboxProperty.timing, function()
         local hits = hitbox:Evaluate(player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
         hits = hitbox:FilterSelf(player.Character, hits)
 
         -- register hits
         EvaluateHit(player, hits, `{moveFolder}/{moveName}`)
-    end)
+    end)]]
     
     return true
 end
@@ -90,7 +90,7 @@ end
 function MoveService:Init(context)
     self.context = context
 
-    --self.connections.hitRequest = events.Hit.OnServerEvent:Connect(EvaluateHit)
+    self.connections.hitRequest = events.Hit.OnServerEvent:Connect(EvaluateHit)
 end
 
 function MoveService:Start()

@@ -123,11 +123,14 @@ function MoveData:Work(_, inputState, _inputObj)
             -- hitbox stuff
             local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
             task.delay(hitboxProperty.timing, function()
-                local hits = hitbox:Evaluate(core.currentServerCFramePrediction * hitboxProperty.cframe, hitboxProperty.size, true)
+                local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
 
                 -- clientside hits
                 core:PlayHit(hits)
+
+                -- serverside stuff
+                events.Hit:FireServer(hits, `{script.Parent.Name}/{script.Name}`)
             end)
         end
     end
