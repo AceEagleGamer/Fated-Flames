@@ -19,7 +19,8 @@ MoveData.comboString = 0
 MoveData.properties = {
     cooldown = 0.5,
     endCD = 1.5,
-    comboStringReset = 1
+    comboStringReset = 1,
+    damage = 5
 }
 
 MoveData.HitboxProperties = {
@@ -48,7 +49,11 @@ MoveData.HitboxProperties = {
             return #hitProperties.HitList == 0
         end,
 
-        ragdolls = true
+        ragdolls = true,
+        ragdollProperties = {
+            knockbackStrength = 75,
+            duration = 1
+        }
     },
 }
 
@@ -113,7 +118,7 @@ function MoveData:Work(_, inputState, _inputObj)
 
     local core = self.context.services.core
     local playerState = core.playerState
-    if playerState.endlag then return end
+    if playerState.endlag then self.free = true; return end
 
     if inputState == Enum.UserInputState.Begin then
          

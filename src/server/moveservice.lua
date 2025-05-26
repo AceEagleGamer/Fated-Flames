@@ -19,7 +19,14 @@ MoveService.connections = {}
 MoveService.playerCDs = {}
 
 --- Private Functions ---
-local function EvaluateHit(player: Player, hitProperties: {[any]: any?}, rawMoveName)
+local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName)
+
+    local services = MoveService.context.services
+
+    -- player sanity check
+    if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character:FindFirstChild("Humanoid").Health <= 0 then return end
+    if not player.Character:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = player.Character.HumanoidRootPart
 
     -- data sanity check
     if hitProperties.HitList == nil then return end
@@ -34,14 +41,26 @@ local function EvaluateHit(player: Player, hitProperties: {[any]: any?}, rawMove
     if not moves:FindFirstChild(moveFolder) then return end
     if not moves[moveFolder]:FindFirstChild(moveName) then return end
 
+    -- get move data
+    local moveData = require(moves[moveFolder]:FindFirstChild(moveName))
+
     -- TODO: security checks. just hit them here doesnt matter
     local playersHit = {}
     for _, hit in hitTable do
 
-        hit:FindFirstChild("Humanoid"):TakeDamage(5)
+        hit:FindFirstChild("Humanoid"):TakeDamage(moveData.properties.damage)
         if playerService:GetPlayerFromCharacter(hit) then
             table.insert(playersHit, hit)
         end
+
+        -- ragdoll if applicable
+        local hitboxProperties = moveData.HitboxProperties[`hit{moveData.comboString}`]
+        if hitboxProperties.ragdolls == true then
+            -- calculate kb
+            local kbDir = (hrp.Position - hit.HumanoidRootPart.Position).Unit
+            services.ragdollservice:Work(hit, kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 50), hitboxProperties.ragdollProperties.duration)
+        end
+
     end
 
     events.ReplicateHit:FireAllClients(player.Name, playersHit)

@@ -86,7 +86,7 @@ function Core:Endlag(duration)
 
     -- sanity check
     if self.context == nil then return end -- idk why this would happen but just making sure
-    if self.endlag then return end -- this might be cause for concern later down the line. currently i dont care
+    if self.playerState.endlag then return end -- this might be cause for concern later down the line. currently i dont care
 
     -- register endlag
     self.playerState.endlag = true
@@ -153,13 +153,26 @@ function Core:Init(context)
         loadHitAnims(npc)
     end
 
-    -- LOLAL PLAYHER
+    -- LOcAL PLAYHER
     self.playerCons[localPlayer.UserId] = {}
 
     -- run stuff ourselves
     localPlayer.CharacterAdded:Connect(function(char)
         -- debug
         -- Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
+
+        self.playerCons[localPlayer.UserId].ragdoll = events.RagdollClient.OnClientEvent:Connect(function(isRagdoll, kbDir)
+            if not char:FindFirstChild("Humanoid") then return end
+            if isRagdoll then
+                char.Humanoid:ChangeState(Enum.HumanoidStateType.Ragdoll)
+                char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+
+                -- Apply any desired impulse when the character ragdolls
+                char.HumanoidRootPart.AssemblyLinearVelocity = -kbDir
+            else
+                char.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+        end)
 
         loadHitAnims(char)
     end)
