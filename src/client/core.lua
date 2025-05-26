@@ -35,7 +35,7 @@ local function loadHitAnims(char)
     local animTracks = {}
     Core.characterAnims[char] = animTracks
 
-    local hum = char:FindFirstChild("Humanoid")
+    local hum = char:WaitForChild("Humanoid", 5)
     if not hum then return end
 
     local animator = hum:FindFirstChild("Animator")
@@ -136,14 +136,15 @@ function Core:Start()
 
     -- run stuff ourselves
     localPlayer.CharacterAdded:Connect(function(char)
-        Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
+        -- debug
+        -- Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
 
         loadHitAnims(char)
     end)
 
     -- hit replication
     events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable)
-        if player.Name == localPlayer.Name then return end
+        if player == localPlayer.Name then return end
         self:PlayHit(hitTable)
     end)
 
