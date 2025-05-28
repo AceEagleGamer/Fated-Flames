@@ -26,6 +26,7 @@ Core.playerState = {
     remote = nil,
     Changed = nil
 }
+Core.queuedHits = {}
 
 Core.debug = false
 
@@ -101,9 +102,6 @@ function Core:Endlag(duration)
     -- TODO: register to the server
 end
 
-function Core:Stun(duration)
-    -- TODO: this
-end
 function Core:PlayHit(hitTable)
     for _, char in hitTable do
 
@@ -161,6 +159,16 @@ function Core:Init(context)
         -- debug
         -- Core.playerCons[localPlayer.UserId].animationPlayed = char:WaitForChild("Humanoid").Animator.AnimationPlayed:Connect(PreventAnimationFromReplicating)
 
+        -- disconnect previous connections
+        if self.playerCons[localPlayer.UserId].ragdoll then self.playerCons[localPlayer.UserId].ragdoll:Disconnect() end
+        if self.playerCons[localPlayer.UserId].isStunned then self.playerCons[localPlayer.UserId].isStunned:Disconnect() end
+
+        -- stun tracking
+        self.playerCons[localPlayer.UserId].isStunned = char:GetAttributeChangedSignal("Stunned"):Connect(function()
+            self.playerState.stunned = char:GetAttribute("Stunned")
+            self.playerState.remote:Fire()
+        end)
+
         self.playerCons[localPlayer.UserId].ragdoll = events.RagdollClient.OnClientEvent:Connect(function(isRagdoll, kbDir)
             if not char:FindFirstChild("Humanoid") then return end
             if isRagdoll then
@@ -183,6 +191,11 @@ function Core:Init(context)
 
         if self.playerState.endlag or self.playerState.stunned then
             localPlayer.Character:FindFirstChild("Humanoid").WalkSpeed = 0
+
+            -- cancel all queued hits on stun
+            for _, hit in self.queuedHits do
+                task.cancel(hit)
+            end
         else
             localPlayer.Character:FindFirstChild("Humanoid").WalkSpeed = self.playerState.originalWalkspeed
         end

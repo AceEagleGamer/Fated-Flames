@@ -28,24 +28,28 @@ MoveData.HitboxProperties = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
-        stunDuration = 0.3,
+        stunDuration = 0.5,
+        interruptible = true
     },
     hit2 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
-        stunDuration = 0.3,
+        stunDuration = 0.5,
+        interruptible = true
     },
     hit3 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
-        stunDuration = 0.3,
+        stunDuration = 0.5,
+        interruptible = true
     },
     hit4 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
+        interruptible = true,
 
         endlag = 1.5,
         endlagConditions = function(hitProperties)
@@ -126,14 +130,11 @@ function MoveData:Work(_, inputState, _inputObj)
     local playerState = core.playerState
     if playerState.endlag then self.free = true; return end
 
-    print("is free")
-
     if inputState == Enum.UserInputState.Begin then
          
         -- request the server for a move
         local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name) -- takes move folder and move name, returns true or false
         if moveGranted then
-            print("Granted")
             self:Tick()
 
             -- stop previous anim (idk if this does anything)
@@ -145,7 +146,7 @@ function MoveData:Work(_, inputState, _inputObj)
             
             -- hitbox stuff
             local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
-            table.insert(MoveData.hitboxQueue, task.delay(hitboxProperty.timing, function()
+            local queueHit = task.delay(hitboxProperty.timing, function()
                 local hitProperties = {}
                 local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
@@ -168,7 +169,12 @@ function MoveData:Work(_, inputState, _inputObj)
 
                 -- serverside stuff
                 events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`)
-            end))
+            end)
+
+            -- store thread to a table if we can interrupt this move. core will cancel all threads in this table if stunned
+            if hitboxProperty.interruptible then
+                table.insert(core.queuedHits, queueHit)
+            end
         end
     end
     self.free = true

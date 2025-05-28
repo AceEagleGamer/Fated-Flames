@@ -98,6 +98,7 @@ function Ragdoll:Init(context)
     self.context = context
 end
 
+-- heeeeeelp
 function Ragdoll:Work(Character, knockbackDirection, ragdollDuration)
 	local player = game:GetService("Players"):GetPlayerFromCharacter(Character)
 	if player then -- if ragdolling player
