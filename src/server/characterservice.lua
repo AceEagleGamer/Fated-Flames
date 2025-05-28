@@ -16,7 +16,7 @@ CharacterService.context = nil
 CharacterService.charFolder = nil
 
 --- Private Functions ---
-local function onCharacterAdded(player: Player, char: Model)
+local function onCharacterAdded(player: Player, char)
 
     -- wait for the character appearance to load
     player.CharacterAppearanceLoaded:Wait()
@@ -59,12 +59,19 @@ local function onCharacterAdded(player: Player, char: Model)
         -- reset connections
         player_info.connections.playerDied:Disconnect()
 
-        -- TODO: handle stuff related to death here. i'll just deleted the character model and erase the reference for now
-        char:Destroy()
         player_info.player_object = nil
+
+        -- ragdoll the player
+        char:SetAttribute("IsRagdoll", true)
+
+        -- play a funny sound
+        local sound = rep.DeathSound:Clone()
+        sound.Parent = char.HumanoidRootPart
+        sound:Play()
 
         -- initiate the respawn
         task.wait(context.respawnTimer)
+        char:Destroy()
 
         player:SetAttribute("CharacterLoaded", true)
         player:LoadCharacter()
