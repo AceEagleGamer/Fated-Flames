@@ -28,19 +28,19 @@ MoveData.HitboxProperties = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
-        stunDuration = 0.2,
+        stunDuration = 0.3,
     },
     hit2 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
-        stunDuration = 0.2,
+        stunDuration = 0.3,
     },
     hit3 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
-        stunDuration = 0.2,
+        stunDuration = 0.3,
     },
     hit4 = {
         timing = 0.25,
@@ -126,11 +126,14 @@ function MoveData:Work(_, inputState, _inputObj)
     local playerState = core.playerState
     if playerState.endlag then self.free = true; return end
 
+    print("is free")
+
     if inputState == Enum.UserInputState.Begin then
          
         -- request the server for a move
         local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name) -- takes move folder and move name, returns true or false
         if moveGranted then
+            print("Granted")
             self:Tick()
 
             -- stop previous anim (idk if this does anything)

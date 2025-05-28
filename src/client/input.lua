@@ -28,9 +28,12 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
     if inputState ~= Enum.UserInputState.Begin then return end
 
     -- check if our character is alive
-    if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <=0 then return end
+    if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then return end
+    local playerChar = player.Character
 
-    -- dont go if we're stunned or endlagged (is thgat the corect term)
+    -- dont go if we're stunned or endlagged (is that the corect term)
+    local core = Input.context.services.core
+    if playerChar:GetAttribute("Stunned") == true or core.playerState.endlag then return end
 
     -- get move
     local parseMoveName = string.split(actionName, '/')

@@ -14,11 +14,28 @@ local MoveService = {}
 
 MoveService.context = nil
 MoveService.debug = false
+
 MoveService.events = {}
 MoveService.connections = {}
 MoveService.playerCDs = {}
 
+MoveService.charThreads = {}
+
 --- Private Functions ---
+local function QueueStun(char, stunDuration)
+
+    -- disconnect previous thread
+    local threadHolder = MoveService.charThreads[(playerService:GetPlayerFromCharacter(char) and playerService:GetPlayerFromCharacter(char).UserId) or char]
+    if not threadHolder then return end
+
+    if threadHolder.stunThread then task.cancel(threadHolder.stunThread) end
+
+    char:SetAttribute("Stunned", true)
+    threadHolder.stunThread = task.delay(stunDuration, function()
+        char:SetAttribute("Stunned", false)
+    end)
+end
+
 local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName)
 
     local services = MoveService.context.services
@@ -53,9 +70,16 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName)
             table.insert(playersHit, hit)
         end
 
-        -- ragdoll if applicable
+        -- hitbox stuff
         local hitboxProperties = moveData.HitboxProperties[`hit{moveData.comboString}`]
-        if hitboxProperties.ragdolls == true then
+
+        -- stun if theres a stun duration
+        if hitboxProperties.stunDuration then
+            QueueStun(hit, hitboxProperties.stunDuration)
+        end
+
+        -- ragdoll if applicable
+        if hitboxProperties.ragdolls then
             -- calculate kb
             local kbDir = (hrp.Position - hit.HumanoidRootPart.Position).Unit
             services.ragdollservice:Work(hit, kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 50), hitboxProperties.ragdollProperties.duration)
@@ -124,10 +148,18 @@ function MoveService:Start()
     -- not sure if i can store this callback in a table. wtv
     events.RequestMove.OnServerInvoke = EvaluateRequest
 
+    -- temp for npcs
+    for _, npc in workspace.NPCs:GetChildren() do
+        self.charThreads[npc] = {}
+    end
+
     self.connections.playerLoaded = PlayerService.events.playerJoining:Connect(function(player: Player)
         
         -- wait for the player to load on the client first
         player:GetAttributeChangedSignal("ClientLoaded"):Wait()
+
+        -- register player threads table
+        self.charThreads[player.UserId] = {}
 
         -- register records to player CDs
         self.playerCDs[player.UserId] = {

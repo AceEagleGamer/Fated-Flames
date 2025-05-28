@@ -6,7 +6,6 @@ Ragdoll.context = nil
 
 --- Private Variables ---
 local events = game:GetService("ReplicatedStorage").Events
-local PhysicsService = game:GetService("PhysicsService")
 local Players = game:GetService("Players")
 local ragParts = game:GetService("ReplicatedStorage").Shared.RagdollParts:GetChildren()
 
@@ -20,7 +19,8 @@ function Work(char)
 
 	for _, v in ipairs(char:GetChildren()) do
 		if v:IsA("BasePart") then
-			PhysicsService:SetPartCollisionGroup(v, "Ragdoll")
+			v:SetAttribute("OriginalCollisionGroup", v.CollisionGroup)
+			v.CollisionGroup = "Ragdoll"
 		end
 	end
 end
@@ -33,7 +33,7 @@ function Revert(char)
 
 	for _, v in ipairs(char:GetChildren()) do
 		if v:IsA("BasePart") then
-			PhysicsService:SetPartCollisionGroup(v, "Default")
+			v.CollisionGroup = v:GetAttribute("OriginalCollisionGroup")
 		end
 	end
 	char.Humanoid.AutoRotate = true
