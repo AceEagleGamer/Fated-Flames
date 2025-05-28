@@ -6,106 +6,91 @@ Ragdoll.context = nil
 
 --- Private Variables ---
 local events = game:GetService("ReplicatedStorage").Events
---> Specific CFrame's I made for the best looking Ragdoll
-local attachmentCFrames = {
-	["Neck"] = {CFrame.new(0, 1, 0, 0, -1, 0, 1, 0, -0, 0, 0, 1), CFrame.new(0, -0.5, 0, 0, -1, 0, 1, 0, -0, 0, 0, 1)},
-	["Left Shoulder"] = {CFrame.new(-1.3, 0.75, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1), CFrame.new(0.2, 0.75, 0, -1, 0, 0, 0, -1, 0, 0, 0, 1)},
-	["Right Shoulder"] = {CFrame.new(1.3, 0.75, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1), CFrame.new(-0.2, 0.75, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
-	["Left Hip"] = {CFrame.new(-0.5, -1, 0, 0, 1, -0, -1, 0, 0, 0, 0, 1), CFrame.new(0, 1, 0, 0, 1, -0, -1, 0, 0, 0, 0, 1)},
-	["Right Hip"] = {CFrame.new(0.5, -1, 0, 0, 1, -0, -1, 0, 0, 0, 0, 1), CFrame.new(0, 1, 0, 0, 1, -0, -1, 0, 0, 0, 0, 1)},
-}
+local PhysicsService = game:GetService("PhysicsService")
+local Players = game:GetService("Players")
+local ragParts = game:GetService("ReplicatedStorage").Shared.RagdollParts:GetChildren()
 
-local ragdollInstanceNames = {
-	["RagdollAttachment"] = true,
-	["RagdollConstraint"] = true,
-	["ColliderPart"] = true,
-}
 --- Private Functions ---
-local function createColliderPart(part: BasePart)
-	if not part then return end
-	local rp = Instance.new("Part")
-	rp.Name = "ColliderPart"
-	rp.Size = part.Size/1.7
-	rp.Massless = true			
-	rp.CFrame = part.CFrame
-	rp.Transparency = 1
-	
-	local wc = Instance.new("WeldConstraint")
-	wc.Part0 = rp
-	wc.Part1 = part
-	
-	wc.Parent = rp
-	rp.Parent = part
-end
+function Work(char)
+	char.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+	char.Humanoid.AutoRotate = false
+	for _, v in ipairs(char.RagdollConstraints.Motors:GetChildren()) do
+		v.Value.Enabled = false
+	end
 
-function replaceJoints(Character)
-
-	local Humanoid = Character:FindFirstChild("Humanoid")
-	Humanoid.AutoRotate = false 
-	Character:WaitForChild("HumanoidRootPart").Massless = true
-	for _, motor in pairs(Character:GetDescendants()) do
-		if motor:IsA("Motor6D") then
-			if not attachmentCFrames[motor.Name] then return end
-			motor.Enabled = false;
-			local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
-			a0.CFrame = attachmentCFrames[motor.Name][1]
-			a1.CFrame = attachmentCFrames[motor.Name][2]
-
-			a0.Name = "RagdollAttachment"
-			a1.Name = "RagdollAttachment"
-
-			createColliderPart(motor.Part1)
-
-			local b = Instance.new("BallSocketConstraint")
-			b.Attachment0 = a0
-			b.Attachment1 = a1
-			b.Name = "RagdollConstraint"
-
-			b.Radius = 0.15
-			b.LimitsEnabled = true
-			b.TwistLimitsEnabled = false
-			b.MaxFrictionTorque = 0
-			b.Restitution = 0
-			b.UpperAngle = 90
-			b.TwistLowerAngle = -45
-			b.TwistUpperAngle = 45
-
-			if motor.Name == "Neck" then
-				b.TwistLimitsEnabled = true
-				b.UpperAngle = 45
-				b.TwistLowerAngle = -70
-				b.TwistUpperAngle = 70
-			end
-			
-			a0.Parent = motor.Part0
-			a1.Parent = motor.Part1
-			b.Parent = motor.Parent
+	for _, v in ipairs(char:GetChildren()) do
+		if v:IsA("BasePart") then
+			PhysicsService:SetPartCollisionGroup(v, "Ragdoll")
 		end
 	end
 end
 
-function resetJoints(Character)
-	Character:WaitForChild("HumanoidRootPart").Massless = false
-	Character:SetAttribute("IsRagdoll", false)
+function Revert(char)
+	char.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+	for _, v in ipairs(char.RagdollConstraints.Motors:GetChildren()) do
+		v.Value.Enabled = true
+	end
 
-	local Humanoid = Character:FindFirstChild("Humanoid")
-	Humanoid.AutoRotate = true
-	
-	if Humanoid.Health < 1 then return end
-	for _, instance in pairs(Character:GetDescendants()) do
-		if ragdollInstanceNames[instance.Name] then
-			instance:Destroy()
-		end
-
-		if instance:IsA("Motor6D") then
-			instance.Enabled = true;
+	for _, v in ipairs(char:GetChildren()) do
+		if v:IsA("BasePart") then
+			PhysicsService:SetPartCollisionGroup(v, "Default")
 		end
 	end
-	
+	char.Humanoid.AutoRotate = true
 end
 
-local function _push(T, Kb)
-	T:ApplyImpulse(T.CFrame.LookVector * Kb)
+function Setup(char)
+
+	local humanoid = char:FindFirstChild("Humanoid")
+	assert(humanoid, "Can only set-up ragdoll on R6 humanoid rigs")
+	assert(humanoid.RigType == Enum.HumanoidRigType.R6, "Can only set-up ragdoll on R6 humanoid rigs")
+	assert(humanoid.RootPart ~= nil, "No RootPart was found in the provided rig")
+	assert(char:FindFirstChild("HumanoidRootPart"), "No HumanoidRootPart was found in the provided rig")
+
+	for _, v in ipairs(char:GetDescendants()) do
+		if Players:GetPlayerFromCharacter(char) then continue end
+		if v:IsA("BasePart") then
+			v:SetNetworkOwner(nil)
+		end
+	end
+
+	-- Setup ragdoll
+	char.Head.Size = Vector3.new(1, 1, 1)
+	humanoid.BreakJointsOnDeath = false
+	humanoid.RequiresNeck = false
+
+	local clones = {}
+	for _, v in ipairs(ragParts) do
+		clones[v.Name] = v:Clone()
+	end
+
+	local folder1 = Instance.new("Folder")
+	folder1.Name = "RagdollConstraints"
+	for _, v in pairs(clones) do
+		if v:IsA("Attachment") then
+			v.Parent = char[v:GetAttribute("Parent")]
+		elseif v:IsA("BallSocketConstraint") then
+			v.Attachment0 = clones[v:GetAttribute("0")]
+			v.Attachment1 = clones[v:GetAttribute("1")]
+			v.Parent = folder1
+		end
+	end
+	folder1.Parent = char
+
+	local folder2 = Instance.new("Folder")
+	folder2.Name = "Motors"
+	local value
+	for _, v in ipairs(char.Torso:GetChildren()) do
+		if v:IsA("Motor6D") then
+			value = Instance.new("ObjectValue")
+			value.Value = v
+			value.Parent = folder2
+		end
+	end
+	folder2.Parent = folder1
+
+	-- Ragdoll trigger
+	char:SetAttribute("IsRagdoll", false)
 end
 
 --- Public Functions ---
@@ -114,23 +99,58 @@ function Ragdoll:Init(context)
 end
 
 function Ragdoll:Work(Character, knockbackDirection, ragdollDuration)
-	if Character:GetAttribute("IsRagdoll") == true then return end
-	Character:SetAttribute("IsRagdoll", true)
-	events.RagdollClient:FireClient(game:GetService("Players"):GetPlayerFromCharacter(Character), true, knockbackDirection)
+	local player = game:GetService("Players"):GetPlayerFromCharacter(Character)
+	if player then -- if ragdolling player
+		if Character:GetAttribute("IsRagdoll") == true then return end
+		Character:SetAttribute("IsRagdoll", true)
+		events.RagdollClient:FireClient(player, true, knockbackDirection)
 
-	task.delay(ragdollDuration, function()
-		events.RagdollClient:FireClient(game:GetService("Players"):GetPlayerFromCharacter(Character), nil)
-		Character:SetAttribute("IsRagdoll", false)
-	end)
+		task.delay(ragdollDuration, function()
+			events.RagdollClient:FireClient(player, nil)
+			Character:SetAttribute("IsRagdoll", false)
+		end)
+	else -- if ragdolling npc
+		if Character:GetAttribute("IsRagdoll") == true then return end
+		Character:SetAttribute("IsRagdoll", true)
+
+		Character.HumanoidRootPart.AssemblyLinearVelocity = -knockbackDirection
+
+		task.delay(ragdollDuration, function()
+			Character.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+			Character:SetAttribute("IsRagdoll", false)
+		end)
+	end
 end
 
 function Ragdoll:Start()
 	local context = self.context
 	local services = context.services
+	--- NPCs ---
+	for _, npc in workspace.NPCs:GetChildren() do -- TODO: replace this when we do actual npcs\
+		self.cons[npc] = {}
+		npc.HumanoidRootPart:SetNetworkOwner(nil)
+
+		Setup(npc)
+
+		self.cons[npc].ragdollEvent = npc:GetAttributeChangedSignal("IsRagdoll"):Connect(function()
+			local isRagdoll = npc:GetAttribute("IsRagdoll")
+			if isRagdoll then
+				Work(npc)
+			else
+				Revert(npc)
+			end
+		end)
+	end
+
+	--- Players ---
 	self.cons.playerAdded = services.playerservice.events.playerJoining:Connect(function(player: Player)
 		self.cons[player.UserId] = {}
 
 		self.cons[player.UserId].characterLoaded = player.CharacterAdded:Connect(function(char)
+			player.CharacterAppearanceLoaded:Wait()
+
+			-- setup char
+			Setup(char)
 
 			-- disconnect previous ragdoll event
 			if self.cons[player.UserId].ragdollEvent then
@@ -140,9 +160,9 @@ function Ragdoll:Start()
 			self.cons[player.UserId].ragdollEvent = char:GetAttributeChangedSignal("IsRagdoll"):Connect(function()
 				local isRagdoll = char:GetAttribute("IsRagdoll")
 				if isRagdoll then
-					replaceJoints(char)
+					Work(char)
 				else
-					resetJoints(char)
+					Revert(char)
 				end
 			end)
     	end)

@@ -206,9 +206,11 @@ end
 function Core:Start()
 
     -- hit replication
-    events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable)
+    events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable, hitProperties)
         if player == localPlayer.Name then return end
         self:PlayHit(hitTable)
+
+        -- do some stun stuff here
     end)
 
     -- client prediction

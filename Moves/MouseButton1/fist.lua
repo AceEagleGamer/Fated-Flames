@@ -27,17 +27,20 @@ MoveData.HitboxProperties = {
     hit1 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5)
+        size = Vector3.new(4,4,5),
+        stunDuration = 0.2,
     },
     hit2 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5)
+        size = Vector3.new(4,4,5),
+        stunDuration = 0.2,
     },
     hit3 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5)
+        size = Vector3.new(4,4,5),
+        stunDuration = 0.2,
     },
     hit4 = {
         timing = 0.25,
@@ -58,8 +61,11 @@ MoveData.HitboxProperties = {
 }
 
 MoveData.IsKey = false
+
 MoveData.animations = {}
 MoveData.sounds = {}
+MoveData.hitboxQueue = {}
+
 MoveData.player = nil
 MoveData.free = true
 MoveData.lastSwing = 0
@@ -136,7 +142,7 @@ function MoveData:Work(_, inputState, _inputObj)
             
             -- hitbox stuff
             local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
-            task.delay(hitboxProperty.timing, function()
+            table.insert(MoveData.hitboxQueue, task.delay(hitboxProperty.timing, function()
                 local hitProperties = {}
                 local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
@@ -159,7 +165,7 @@ function MoveData:Work(_, inputState, _inputObj)
 
                 -- serverside stuff
                 events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`)
-            end)
+            end))
         end
     end
     self.free = true

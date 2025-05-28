@@ -63,7 +63,7 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName)
 
     end
 
-    events.ReplicateHit:FireAllClients(player.Name, playersHit)
+    events.ReplicateHit:FireAllClients(player.Name, playersHit, moveData.HitboxProperties[`hit{moveData.comboString}`])
 end
 
 local function EvaluateRequest(player, moveFolder: string, moveName: string)
