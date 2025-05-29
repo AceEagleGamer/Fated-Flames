@@ -152,7 +152,7 @@ function Input:Start()
 
             -- dont go if we're below cd
             if tick() - moveMod.lastSwing >= cd then
-                self.moving = true
+                self.moving = true -- for preventing jumps... is there a better way of doing this?
                 EvaluateMoveInput(self.M1Properties.moveName, Enum.UserInputState.Begin)
 
                 task.delay(moveMod:GetCooldown(), function()

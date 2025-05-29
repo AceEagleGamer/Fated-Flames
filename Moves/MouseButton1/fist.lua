@@ -5,6 +5,8 @@
 local rep = game:GetService("ReplicatedStorage")
 local shared = rep.Shared
 
+local localPlayer = game:GetService("Players").LocalPlayer
+
 local moveAnims = rep.MoveAnims
 local moveSFX = rep.MoveSFX
 local events = rep.Events
@@ -15,6 +17,18 @@ local hitbox = require(shared.hitbox)
 --- Public Variables ---
 local MoveData = {}
 MoveData.comboString = 0
+MoveData.context = nil
+
+MoveData.IsKey = false
+
+MoveData.animations = {}
+MoveData.sounds = {}
+MoveData.hitboxQueue = {}
+
+MoveData.player = nil
+MoveData.free = true
+MoveData.lastSwing = 0
+MoveData.lastlastSwing = 0 -- why
 
 MoveData.properties = {
     cooldown = 0.5,
@@ -51,7 +65,6 @@ MoveData.HitboxProperties = {
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
         interruptible = true,
-        canJump = true,
 
         endlag = 1.5,
         endlagConditions = function(hitProperties)
@@ -62,19 +75,32 @@ MoveData.HitboxProperties = {
         ragdollProperties = {
             knockbackStrength = 75,
             duration = 1
+        },
+
+        variants = {
+            uppercut = {
+                conditionFulfilled = function()
+                    return MoveData.context.services.input.heldKeys.space
+                end,
+                timing = 0.25,
+                cframe = CFrame.new(0,-2,-3),
+                size = Vector3.new(5,4,5),
+                interruptible = true,
+            },
+            downslam = {
+                conditionFulfilled = function()
+                    local timeActivated = tick() - MoveData.lastlastSwing
+                    print(timeActivated)
+                    return (timeActivated > 0.1 and timeActivated < 1) and localPlayer.Character.Humanoid.FloorMaterial == Enum.Material.Air
+                end,
+                timing = 0.25,
+                cframe = CFrame.new(0,-2,-3),
+                size = Vector3.new(5,4,5),
+                interruptible = true,
+            }
         }
     },
 }
-
-MoveData.IsKey = false
-
-MoveData.animations = {}
-MoveData.sounds = {}
-MoveData.hitboxQueue = {}
-
-MoveData.player = nil
-MoveData.free = true
-MoveData.lastSwing = 0
 
 --- Public Functions ---
 function MoveData:ResetDefaults()
@@ -94,6 +120,7 @@ function MoveData:Tick()
     if tick() - self.lastSwing >= self.properties.comboStringReset then
         self.comboString = 0
     end
+
     self.lastSwing = tick()
 
     if self.comboString == 4 then self.comboString = 0 end -- reset
@@ -132,6 +159,10 @@ function MoveData:Work(_, inputState, _inputObj)
     local playerState = core.playerState
     if playerState.endlag then self.free = true; return end
 
+    -- check if we're alive and existing
+    local char = localPlayer.Character
+    if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then self.free = true; return end
+
     if inputState == Enum.UserInputState.Begin then
          
         -- request the server for a move
@@ -141,13 +172,31 @@ function MoveData:Work(_, inputState, _inputObj)
 
             -- stop previous anim (idk if this does anything)
             if self.animations[`hit{self.comboString - 1}`] then self.animations[`hit{self.comboString - 1}`]:Stop() end
+
+            -- check if we're at hit4, then check if any conditions can be fulfilled
+            local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
+            local moveAnim = self.animations[`hit{self.comboString}`]
+            local moveSound = self.sounds[`hit{self.comboString}`]
+            if hitboxProperty.variants then
+
+                for variantName, variantData in hitboxProperty.variants do
+                    if variantData.conditionFulfilled() then
+                        moveAnim = self.animations[variantName]
+                        moveSound = self.sounds[variantName]
+
+                        hitboxProperty = variantData
+                        break
+                    end
+                end
+            end
+
+            MoveData.lastlastSwing = tick() -- die
             
             -- play vfx stuff
-            self.animations[`hit{self.comboString}`]:Play()
-            self.sounds[`hit{self.comboString}`]:Play()
+            moveAnim:Play()
+            moveSound:Play()
             
             -- hitbox stuff
-            local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
             local queueHit = task.delay(hitboxProperty.timing, function()
                 local hitProperties = {}
                 local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
