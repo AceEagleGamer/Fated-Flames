@@ -24,12 +24,13 @@ MoveData.properties = {
 }
 
 MoveData.HitboxProperties = {
+    hit0 = { --[[ catch for nil. dont ask ]]},
     hit1 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
         stunDuration = 0.5,
-        interruptible = true
+        interruptible = true,
     },
     hit2 = {
         timing = 0.25,
@@ -50,6 +51,7 @@ MoveData.HitboxProperties = {
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(4,4,5),
         interruptible = true,
+        canJump = true,
 
         endlag = 1.5,
         endlagConditions = function(hitProperties)

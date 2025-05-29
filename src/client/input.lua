@@ -3,7 +3,7 @@ local player = game.Players.LocalPlayer
 local cas = game:GetService("ContextActionService")
 local run = game:GetService("RunService")
 local rep = game:GetService("ReplicatedStorage")
---local uis = game:GetService("UserInputService")
+local uis = game:GetService("UserInputService")
 local moves = rep.Moves
 
 --- Public Variables ---
@@ -20,7 +20,13 @@ Input.M1Properties = {
     moveName = nil,
     moveMod = nil
 }
-Input.holdingM1 = false
+
+Input.heldKeys = {
+    m1 = false,
+    space = false
+}
+
+Input.moving = false
 
 --- Private Functions ---
 local function EvaluateMoveInput(actionName, inputState, _inputObj)
@@ -63,7 +69,21 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
 end
 
 local function EvaluateM1(_, inputState, _inputObj)
-    Input.holdingM1 = inputState == Enum.UserInputState.Begin
+    Input.heldKeys.m1 = inputState == Enum.UserInputState.Begin
+    return Enum.ContextActionResult.Pass
+end
+
+local function EvaluateSpace(_, inputState, _inputObj)
+    Input.heldKeys.space = inputState == Enum.UserInputState.Begin
+    return Enum.ContextActionResult.Pass
+end
+
+local function SetJumpPower(jp)
+
+    local char = player.Character
+    if not char or not char:FindFirstChild("Humanoid") then return end
+
+    char.Humanoid.JumpPower = jp
 end
 
 --- Public Functions ---
@@ -76,8 +96,8 @@ function Input:Init(context)
     Input.bindings.Q = "fistdash"
     
     -- test i guess
-     for key, move in self.bindings do
-        -- get the move module
+    for key, move in self.bindings do
+    -- get the move module
         local moveBranch = moves:FindFirstChild(key)
         if not moveBranch then warn(`{key} move branch does not exist for {move}`); continue end
 
@@ -95,16 +115,19 @@ function Input:Init(context)
         
         -- non m1 moves
         if moveMod.IsKey then
-            self.connections[`{key}/{move}`] = cas:BindAction(`{key}/{move}`, EvaluateMoveInput, false, Enum.KeyCode[key])
+            cas:BindAction(`{key}/{move}`, EvaluateMoveInput, false, Enum.KeyCode[key])
         else -- assume this is an m1 move
-            self.connections[`{key}/{move}`] = cas:BindAction(`{key}/{move}`, EvaluateM1, false, Enum.UserInputType.MouseButton1)
+            cas:BindAction(`{key}/{move}`, EvaluateM1, false, Enum.UserInputType.MouseButton1)
             self.M1Properties.moveMod = moveMod
             self.M1Properties.moveName = `{key}/{move}`
         end
-     end
+    end
+
+    -- for spacebar
+    cas:BindAction('EvaluateJump', EvaluateSpace, false, Enum.KeyCode.Space)
 
     -- reset move mods on death
-     self.connections.characterLoaded = player.CharacterAdded:Connect(function(char)
+    self.connections.characterLoaded = player.CharacterAdded:Connect(function(char)
 
         -- loop through movemods and call ResetDefaults and Init
         for _, moveMod in self.moveModules do
@@ -112,23 +135,36 @@ function Input:Init(context)
             moveMod:ResetDefaults()
             moveMod:Init(player, context)
         end
-        
-     end)
+    
+    end)
 end
 
 function Input:Start()
 
-     -- m1 loop
-     self.connections.m1Loop = run.RenderStepped:Connect(function(dt)
-        if self.holdingM1 then
-            
+     -- input loop
+     self.connections.inputLoop = run.Heartbeat:Connect(function(dt)
+
+        if self.heldKeys.m1 then
             -- check cd
             local moveMod = self.M1Properties.moveMod
+            local hitboxProperty = moveMod.HitboxProperties
             local cd = moveMod:GetCooldown()
-            
+
             -- dont go if we're below cd
-            if tick() - moveMod.lastSwing < cd then return end
-           EvaluateMoveInput(self.M1Properties.moveName, Enum.UserInputState.Begin)
+            if tick() - moveMod.lastSwing >= cd then
+                self.moving = true
+                EvaluateMoveInput(self.M1Properties.moveName, Enum.UserInputState.Begin)
+
+                task.delay(moveMod:GetCooldown(), function()
+                    self.moving = false
+                end)
+
+                SetJumpPower(if hitboxProperty[`hit{moveMod.comboString}`].canJump then 50 else 0)
+            end
+
+        else
+            if self.moving then return end
+            SetJumpPower(50)
         end
      end)
 end

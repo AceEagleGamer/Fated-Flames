@@ -30,9 +30,31 @@ local function QueueStun(char, stunDuration)
 
     if threadHolder.stunThread then task.cancel(threadHolder.stunThread) end
 
+    -- sanity check
+    if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end 
+
     char:SetAttribute("Stunned", true)
     threadHolder.stunThread = task.delay(stunDuration, function()
         char:SetAttribute("Stunned", false)
+    end)
+end
+
+local function preventJumping(char, duration)
+
+        -- disconnect previous thread
+    local threadHolder = MoveService.charThreads[(playerService:GetPlayerFromCharacter(char) and playerService:GetPlayerFromCharacter(char).UserId) or char]
+    if not threadHolder then return end
+
+    if threadHolder.stopJumping then task.cancel(threadHolder.stopJumping) end
+
+        -- sanity check
+    if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end 
+
+    char:SetAttribute("StopJumping", true)
+    char.Humanoid.JumpPower = 0
+    threadHolder.stopJumping = task.delay(duration, function()
+        char:SetAttribute("StopJumping", false)
+        char.Humanoid.JumpPower = 50
     end)
 end
 

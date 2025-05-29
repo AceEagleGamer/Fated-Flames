@@ -102,6 +102,10 @@ function Core:Endlag(duration)
     -- TODO: register to the server
 end
 
+function Core:Attacking(moveData)
+
+end
+
 function Core:PlayHit(hitTable)
     for _, char in hitTable do
 
@@ -190,14 +194,19 @@ function Core:Init(context)
         if not localPlayer.Character or not localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character.Humanoid.Health <= 0 then return end
 
         if self.playerState.endlag or self.playerState.stunned then
+
             localPlayer.Character:FindFirstChild("Humanoid").WalkSpeed = 0
+            localPlayer.Character:FindFirstChild("Humanoid").JumpPower = 0
 
             -- cancel all queued hits on stun
-            for _, hit in self.queuedHits do
-                task.cancel(hit)
+            if self.playerState.stunned then
+                for _, hit in self.queuedHits do
+                    task.cancel(hit)
+                end
             end
         else
             localPlayer.Character:FindFirstChild("Humanoid").WalkSpeed = self.playerState.originalWalkspeed
+            localPlayer.Character:FindFirstChild("Humanoid").JumpPower = self.playerState.originalJumpPower
         end
     end)
 

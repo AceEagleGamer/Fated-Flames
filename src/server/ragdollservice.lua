@@ -7,7 +7,7 @@ Ragdoll.context = nil
 --- Private Variables ---
 local events = game:GetService("ReplicatedStorage").Events
 local Players = game:GetService("Players")
-local ragParts = game:GetService("ReplicatedStorage").Shared.RagdollParts:GetChildren()
+local ragParts = game:GetService("ReplicatedStorage").RagdollParts:GetChildren()
 
 --- Private Functions ---
 function Work(char)
