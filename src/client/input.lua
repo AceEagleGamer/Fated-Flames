@@ -167,6 +167,10 @@ function Input:Start()
             SetJumpPower(50)
         end
      end)
+
+    uis.JumpRequest:Connect(function()  
+        print("Req")
+    end)
 end
 
 return Input

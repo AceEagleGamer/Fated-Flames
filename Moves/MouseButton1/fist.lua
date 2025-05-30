@@ -97,6 +97,11 @@ MoveData.HitboxProperties = {
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
                     duration = 1
                 },
+
+                endlag = 1.5,
+                endlagConditions = function(hitProperties)
+                    return #hitProperties.HitList == 0
+                end,
             },
             downslam = {
                 conditionFulfilled = function()
@@ -116,7 +121,11 @@ MoveData.HitboxProperties = {
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
                     duration = 1
                 },
-                
+
+                endlag = 1.5,
+                endlagConditions = function(hitProperties)
+                    return #hitProperties.HitList == 0
+                end,
             }
         }
     },
@@ -221,27 +230,29 @@ function MoveData:Work(_, inputState, _inputObj)
             -- hitbox stuff
             local queueHit = task.delay(hitboxProperty.timing, function()
                 local hitProperties = {}
-                local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
+                local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, false)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
 
                 -- clientside hits
                 core:PlayHit(hits)
 
-                -- fill in hit properties
                 -- evaluate conditions
                 hitProperties.HitList = hits
+
+                -- serverside stuff
+                events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`, chosenVariant)
 
                 -- handle endlag if there is one
                 if hitboxProperty.endlag then
                     local conditionFulfilled = hitboxProperty.endlagConditions(hitProperties)
                     if conditionFulfilled then
                         core:Endlag(hitboxProperty.endlag)
+                    else
+                        task.wait(0.3)
+                        moveAnim:AdjustSpeed(8)
                     end
 
                 end
-
-                -- serverside stuff
-                events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`, chosenVariant)
             end)
 
             -- store thread to a table if we can interrupt this move. core will cancel all threads in this table if stunned
