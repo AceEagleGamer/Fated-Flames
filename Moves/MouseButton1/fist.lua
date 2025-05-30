@@ -73,30 +73,50 @@ MoveData.HitboxProperties = {
 
         ragdolls = true,
         ragdollProperties = {
-            knockbackStrength = 75,
+            knockbackStrength = 125,
             duration = 1
         },
 
         variants = {
             uppercut = {
                 conditionFulfilled = function()
-                    return MoveData.context.services.input.heldKeys.space
+                    local timeActivated = tick() - MoveData.lastlastSwing
+                    print(timeActivated)
+                    return timeActivated < 0.7 and MoveData.context.services.input.heldKeys.space
                 end,
                 timing = 0.25,
-                cframe = CFrame.new(0,-2,-3),
-                size = Vector3.new(5,4,5),
+                cframe = CFrame.new(0,2,-3),
+                size = Vector3.new(3,4,3),
                 interruptible = true,
+                knockback = Vector3.new(0,30,0),
+
+                ragdolls = true,
+                ragdollProperties = {
+                    knockback = Vector3.new(0,-1,0),
+                    knockbackStrength = 150,
+                    setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
+                    duration = 1
+                },
             },
             downslam = {
                 conditionFulfilled = function()
                     local timeActivated = tick() - MoveData.lastlastSwing
-                    print(timeActivated)
-                    return (timeActivated > 0.1 and timeActivated < 1) and localPlayer.Character.Humanoid.FloorMaterial == Enum.Material.Air
+                    return (timeActivated > 0.7 and timeActivated < 1) and localPlayer.Character.Humanoid.FloorMaterial == Enum.Material.Air
                 end,
                 timing = 0.25,
                 cframe = CFrame.new(0,-2,-3),
                 size = Vector3.new(5,4,5),
                 interruptible = true,
+                bypassRagdoll = true,
+
+                ragdolls = true,
+                ragdollProperties = {
+                    knockback = Vector3.new(0,1,0),
+                    knockbackStrength = 150,
+                    setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
+                    duration = 1
+                },
+                
             }
         }
     },
@@ -177,6 +197,7 @@ function MoveData:Work(_, inputState, _inputObj)
             local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
             local moveAnim = self.animations[`hit{self.comboString}`]
             local moveSound = self.sounds[`hit{self.comboString}`]
+            local chosenVariant = nil
             if hitboxProperty.variants then
 
                 for variantName, variantData in hitboxProperty.variants do
@@ -184,6 +205,7 @@ function MoveData:Work(_, inputState, _inputObj)
                         moveAnim = self.animations[variantName]
                         moveSound = self.sounds[variantName]
 
+                        chosenVariant = variantName
                         hitboxProperty = variantData
                         break
                     end
@@ -219,7 +241,7 @@ function MoveData:Work(_, inputState, _inputObj)
                 end
 
                 -- serverside stuff
-                events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`)
+                events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`, chosenVariant)
             end)
 
             -- store thread to a table if we can interrupt this move. core will cancel all threads in this table if stunned

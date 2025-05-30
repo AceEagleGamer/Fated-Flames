@@ -99,10 +99,15 @@ function Ragdoll:Init(context)
 end
 
 -- heeeeeelp
-function Ragdoll:Work(Character, knockbackDirection, ragdollDuration)
+function Ragdoll:Work(Character, knockbackDirection, ragdollDuration, setCFrame)
 	local player = game:GetService("Players"):GetPlayerFromCharacter(Character)
 	if player then -- if ragdolling player
 		if Character:GetAttribute("IsRagdoll") == true then return end
+
+		if setCFrame then
+			Character:PivotTo(Character:GetPivot() * setCFrame)
+		end
+
 		Character:SetAttribute("IsRagdoll", true)
 		events.RagdollClient:FireClient(player, true, knockbackDirection)
 
@@ -112,6 +117,10 @@ function Ragdoll:Work(Character, knockbackDirection, ragdollDuration)
 		end)
 	else -- if ragdolling npc
 		if Character:GetAttribute("IsRagdoll") == true then return end
+		if setCFrame then
+			Character:PivotTo(Character:GetPivot() * setCFrame)
+		end
+
 		Character:SetAttribute("IsRagdoll", true)
 
 		Character.HumanoidRootPart.AssemblyLinearVelocity = -knockbackDirection

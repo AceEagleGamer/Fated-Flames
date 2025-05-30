@@ -58,7 +58,7 @@ local function preventJumping(char, duration)
     end)
 end
 
-local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName)
+local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, variant)
 
     local services = MoveService.context.services
 
@@ -82,6 +82,12 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName)
 
     -- get move data
     local moveData = require(moves[moveFolder]:FindFirstChild(moveName))
+    local hitboxProperties = moveData.HitboxProperties[`hit{moveData.comboString}`]
+
+    -- check if theres a variant
+    if variant then
+        hitboxProperties = hitboxProperties.variants[variant]
+    end
 
     -- TODO: security checks. just hit them here doesnt matter
     local playersHit = {}
@@ -92,9 +98,6 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName)
             table.insert(playersHit, hit)
         end
 
-        -- hitbox stuff
-        local hitboxProperties = moveData.HitboxProperties[`hit{moveData.comboString}`]
-
         -- stun if theres a stun duration
         if hitboxProperties.stunDuration then
             QueueStun(hit, hitboxProperties.stunDuration)
@@ -103,8 +106,10 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName)
         -- ragdoll if applicable
         if hitboxProperties.ragdolls then
             -- calculate kb
-            local kbDir = (hrp.Position - hit.HumanoidRootPart.Position).Unit
-            services.ragdollservice:Work(hit, kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 50), hitboxProperties.ragdollProperties.duration)
+            local ragdollProperties = hitboxProperties.ragdollProperties
+            local kbDir = ragdollProperties.knockback or (hrp.Position - hit.HumanoidRootPart.Position).Unit
+            print(kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 1))
+            services.ragdollservice:Work(hit, kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 1), hitboxProperties.ragdollProperties.duration, ragdollProperties.setCFrame)
         end
 
     end
