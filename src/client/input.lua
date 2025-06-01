@@ -151,7 +151,7 @@ function Input:Start()
             local cd = moveMod:GetCooldown()
 
             -- dont go if we're below cd
-            if tick() - moveMod.lastSwing >= cd then
+            if tick() - moveMod.lastSwing >= cd and not self.moving then
                 self.moving = true -- for preventing jumps... is there a better way of doing this?
                 EvaluateMoveInput(self.M1Properties.moveName, Enum.UserInputState.Begin)
 
@@ -167,10 +167,6 @@ function Input:Start()
             SetJumpPower(50)
         end
      end)
-
-    uis.JumpRequest:Connect(function()  
-        print("Req")
-    end)
 end
 
 return Input

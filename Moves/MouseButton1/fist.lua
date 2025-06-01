@@ -31,7 +31,7 @@ MoveData.lastSwing = 0
 MoveData.lastlastSwing = 0 -- why
 
 MoveData.properties = {
-    cooldown = 0.5,
+    cooldown = 0,
     endCD = 1.5,
     comboStringReset = 1,
     damage = 5
@@ -134,7 +134,7 @@ MoveData.HitboxProperties = {
 --- Public Functions ---
 function MoveData:ResetDefaults()
     self.comboString = 0
-    self.properties.cooldown = 0.5
+    self.properties.cooldown = 0.45
 
     table.clear(self.animations)
     self.player = nil

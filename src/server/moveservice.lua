@@ -39,7 +39,7 @@ local function QueueStun(char, stunDuration)
     end)
 end
 
-local function preventJumping(char, duration)
+local function _preventJumping(char, duration)
 
         -- disconnect previous thread
     local threadHolder = MoveService.charThreads[(playerService:GetPlayerFromCharacter(char) and playerService:GetPlayerFromCharacter(char).UserId) or char]
@@ -108,7 +108,6 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, va
             -- calculate kb
             local ragdollProperties = hitboxProperties.ragdollProperties
             local kbDir = ragdollProperties.knockback or (hrp.Position - hit.HumanoidRootPart.Position).Unit
-            print(kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 1))
             services.ragdollservice:Work(hit, kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 1), hitboxProperties.ragdollProperties.duration, ragdollProperties.setCFrame)
         end
 
