@@ -94,7 +94,7 @@ function Input:Init(context)
     -- TODO: load actual bindings here
     Input.bindings.MouseButton1 = "fist"
     Input.bindings.F = "fistblock"
-    Input.bindings.Q = "fistdash"
+    Input.bindings.Q = "fist"
     
     -- test i guess
     for key, move in self.bindings do
