@@ -84,8 +84,6 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
     if tick() - Input.CDTable[CDName] < cd then return end
     Input.CDTable[CDName] = tick()
 
-    print(`{CDName} is acting`)
-
     -- run the move module
     moveMod:Work(actionName, inputState, _inputObj)
 end
