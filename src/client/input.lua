@@ -82,6 +82,7 @@ local function SetJumpPower(jp)
 
     local char = player.Character
     if not char or not char:FindFirstChild("Humanoid") then return end
+    if Input.context.services.core.playerState.endlag then return end
 
     char.Humanoid.JumpPower = jp
 end
@@ -140,7 +141,6 @@ function Input:Init(context)
 end
 
 function Input:Start()
-
      -- input loop
      self.connections.inputLoop = run.Heartbeat:Connect(function(dt)
 
@@ -152,12 +152,7 @@ function Input:Start()
 
             -- dont go if we're below cd
             if tick() - moveMod.lastSwing >= cd and not self.moving then
-                self.moving = true -- for preventing jumps... is there a better way of doing this?
                 EvaluateMoveInput(self.M1Properties.moveName, Enum.UserInputState.Begin)
-
-                task.delay(moveMod:GetCooldown(), function()
-                    self.moving = false
-                end)
 
                 SetJumpPower(if hitboxProperty[`hit{moveMod.comboString}`].canJump then 50 else 0)
             end

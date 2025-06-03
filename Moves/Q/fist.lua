@@ -1,3 +1,4 @@
+--- Public Variables ---
 local MoveData = {}
 MoveData.comboString = 0
 
@@ -16,7 +17,7 @@ MoveData.HitboxProperties = {
     },
 }
 
-MoveData.IsKey = false
+MoveData.IsKey = true
 MoveData.context = nil
 
 MoveData.animations = {}
@@ -26,5 +27,28 @@ MoveData.hitboxQueue = {}
 MoveData.player = nil
 MoveData.free = true
 MoveData.lastSwing = 0
+
+--- Public Functions ---
+function MoveData:ResetDefaults()
+    -- reset move data basically
+end
+
+function MoveData:GetCooldown()
+    return 0
+end
+
+function MoveData:Tick()
+    -- in case its a combo or something like that. or a successive move thing
+end
+
+function MoveData:Init(context)
+    -- only to get context and maybe some extra setup stuff
+    self.context = context
+end
+
+function MoveData:Work(_, inputState, _inputObj)
+    -- the move itself. visuals and hitbox
+    print("test")
+end
 
 return MoveData

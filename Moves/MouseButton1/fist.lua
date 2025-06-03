@@ -34,7 +34,8 @@ MoveData.properties = {
     cooldown = 0,
     endCD = 1.5,
     comboStringReset = 1,
-    damage = 5
+    damage = 5,
+    canMoveAgain = 0.45
 }
 
 MoveData.HitboxProperties = {
@@ -81,7 +82,6 @@ MoveData.HitboxProperties = {
             uppercut = {
                 conditionFulfilled = function()
                     local timeActivated = tick() - MoveData.lastlastSwing
-                    print(timeActivated)
                     return timeActivated < 0.7 and MoveData.context.services.input.heldKeys.space
                 end,
                 timing = 0.25,
@@ -149,7 +149,7 @@ function MoveData:Tick()
     if tick() - self.lastSwing >= self.properties.comboStringReset then
         self.comboString = 0
     end
-
+    
     self.lastSwing = tick()
 
     if self.comboString == 4 then self.comboString = 0 end -- reset
@@ -161,6 +161,7 @@ function MoveData:Init(player: Player, context)
 
     self.context = context
     self.player = player
+    self.endlagging = false
 
     -- index some important stuff
     local char = player.Character
@@ -185,8 +186,12 @@ function MoveData:Work(_, inputState, _inputObj)
     self.free = false
 
     local core = self.context.services.core
+    local input = self.context.services.input
     local playerState = core.playerState
     if playerState.endlag then self.free = true; return end
+
+    -- if we're already moving dont go
+    if input.moving then return end
 
     -- check if we're alive and existing
     local char = localPlayer.Character
@@ -197,6 +202,13 @@ function MoveData:Work(_, inputState, _inputObj)
         -- request the server for a move
         local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name) -- takes move folder and move name, returns true or false
         if moveGranted then
+
+            -- moving logic
+            input.moving = true
+            task.delay(self.properties.canMoveAgain, function()
+                input.moving = false
+            end)
+
             self:Tick()
 
             -- stop previous anim (idk if this does anything)
@@ -247,11 +259,11 @@ function MoveData:Work(_, inputState, _inputObj)
                     local conditionFulfilled = hitboxProperty.endlagConditions(hitProperties)
                     if conditionFulfilled then
                         core:Endlag(hitboxProperty.endlag)
+                        
                     else
                         task.wait(0.3)
-                        moveAnim:AdjustSpeed(8)
+                        moveAnim:AdjustSpeed(12)
                     end
-
                 end
             end)
 
