@@ -58,7 +58,7 @@ local function _preventJumping(char, duration)
     end)
 end
 
-local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, variant)
+local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hitboxVariant, hitDataName)
 
     local services = MoveService.context.services
 
@@ -82,11 +82,12 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, va
 
     -- get move data
     local moveData = require(moves[moveFolder]:FindFirstChild(moveName))
-    local hitboxProperties = moveData.HitboxProperties[`hit{moveData.comboString}`]
+    local hitboxProperties = moveData.HitboxProperties[hitDataName]
+    print(hitDataName)
 
-    -- check if theres a variant
-    if variant then
-        hitboxProperties = hitboxProperties.variants[variant]
+    -- check if theres a hitbox variant
+    if hitboxVariant then
+        hitboxProperties = hitboxProperties.variants[hitboxVariant]
     end
 
     -- TODO: security checks. just hit them here doesnt matter
@@ -116,7 +117,7 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, va
     events.ReplicateHit:FireAllClients(player.Name, playersHit, moveData.HitboxProperties[`hit{moveData.comboString}`])
 end
 
-local function EvaluateRequest(player, moveFolder: string, moveName: string)
+local function EvaluateRequest(player, moveFolder: string, moveName: string, variant)
 
     -- sanity checks
     if not moves:FindFirstChild(moveFolder) then return false end
@@ -126,17 +127,31 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string)
     local playerTable = MoveService.playerCDs[player.UserId]
     if not playerTable then warn(`[MoveService] {player.Name} does not have a CD table`); return false end
 
-    -- catch for nil
-    if not playerTable[`{moveFolder}{moveName}`] then playerTable[`{moveFolder}{moveName}`] = 0 end
-    local playerMoveCD = playerTable[`{moveFolder}{moveName}`]
-
     -- get move module
     local moveData = require(moves[moveFolder]:FindFirstChild(moveName))
-    local moveCD = moveData:GetCooldown() - 0.1 -- to make it more lenient i guess
 
+    -- check if we have a valid variant
+    local variantChosen = nil
+    if moveData.properties.variants and moveData.properties.variants[variant] then variantChosen = moveData.properties.variants[variant] end
+
+    -- check if we have a valid CD table. basically a more complicated check for nil :/.
+    local CDName = nil
+    if not variantChosen then
+        if not playerTable[`{moveFolder}{moveName}`] then
+            playerTable[`{moveFolder}{moveName}`] = 0
+        end
+        CDName = `{moveFolder}{moveName}`
+    else
+        if not playerTable[`{moveFolder}{moveName}{variantChosen.name}`] then
+            playerTable[`{moveFolder}{moveName}{variantChosen.name}`] = 0
+        end
+        CDName = `{moveFolder}{moveName}{variantChosen.name}`
+    end
+
+    local moveCD = moveData:GetCooldown(variant) - 0.1 -- to make it more lenient i guess
     -- check CD timings
-    if tick() - playerMoveCD < moveCD then warn(`[MoveService] {player.Name} requesting a move under cooldown`); return false end
-    playerTable[`{moveFolder}{moveName}`] = tick()
+    if tick() - playerTable[CDName] < moveCD then warn(`[MoveService] {player.Name} requesting a move under cooldown`); return false end
+    playerTable[`{moveFolder}{moveName}{variant}`] = tick()
     moveData:Tick()
 
     -- update lastmove and lastmovetick

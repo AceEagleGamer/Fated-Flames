@@ -74,7 +74,7 @@ MoveData.HitboxProperties = {
 
         ragdolls = true,
         ragdollProperties = {
-            knockbackStrength = 125,
+            knockbackStrength = 75,
             duration = 1
         },
 
@@ -93,7 +93,7 @@ MoveData.HitboxProperties = {
                 ragdolls = true,
                 ragdollProperties = {
                     knockback = Vector3.new(0,-1,0),
-                    knockbackStrength = 150,
+                    knockbackStrength = 120,
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
                     duration = 1
                 },
@@ -117,7 +117,7 @@ MoveData.HitboxProperties = {
                 ragdolls = true,
                 ragdollProperties = {
                     knockback = Vector3.new(0,1,0),
-                    knockbackStrength = 150,
+                    knockbackStrength = 70,
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
                     duration = 1
                 },
@@ -252,7 +252,7 @@ function MoveData:Work(_, inputState, _inputObj)
                 hitProperties.HitList = hits
 
                 -- serverside stuff
-                events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`, chosenVariant)
+                events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`, chosenVariant, `hit{self.comboString}`)
 
                 -- handle endlag if there is one
                 if hitboxProperty.endlag then

@@ -54,15 +54,37 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
     local moveMod = Input.moveModules[`{moveFolder}/{moveName}`]
     if not moveMod then warn(`{moveFolder}/{moveName} does not have a valid move module`); return end
 
+    -- check if we have a valid variant
+    local variantChosen = nil
+    if moveMod.properties.variants then
+        for variantName, variantData in moveMod.properties.variants do
+            if variantData.conditionFulfilled() then
+                variantChosen = {name = variantName, data = variantData}
+                break
+            end
+        end
+    end
+
     -- check if we have a valid CD table
-    if not Input.CDTable[`{moveFolder}/{moveName}`] then
-        Input.CDTable[`{moveFolder}/{moveName}`] = 0
+    local CDName = nil
+    if not variantChosen then
+        if not Input.CDTable[`{moveFolder}/{moveName}`] then
+            Input.CDTable[`{moveFolder}/{moveName}`] = 0
+        end
+        CDName = `{moveFolder}/{moveName}`
+    else
+        if not Input.CDTable[`{moveFolder}/{moveName}/{variantChosen.name}`] then
+            Input.CDTable[`{moveFolder}/{moveName}/{variantChosen.name}`] = 0
+        end
+        CDName = `{moveFolder}/{moveName}/{variantChosen.name}`
     end
 
     -- check if we're off cooldown
     local cd = moveMod:GetCooldown()
-    if tick() - Input.CDTable[`{moveFolder}/{moveName}`] < cd then return end
-    Input.CDTable[`{moveFolder}/{moveName}`] = tick()
+    if tick() - Input.CDTable[CDName] < cd then return end
+    Input.CDTable[CDName] = tick()
+
+    print(`{CDName} is acting`)
 
     -- run the move module
     moveMod:Work(actionName, inputState, _inputObj)
@@ -158,7 +180,7 @@ function Input:Start()
             end
 
         else
-            if self.moving then return end
+            if self.moving then SetJumpPower(0); return end
             SetJumpPower(50)
         end
      end)
