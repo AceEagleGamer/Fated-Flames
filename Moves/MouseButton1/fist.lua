@@ -43,28 +43,28 @@ MoveData.HitboxProperties = {
     hit1 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5),
+        size = Vector3.new(3,3,3),
         stunDuration = 0.5,
         interruptible = true,
     },
     hit2 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5),
+        size = Vector3.new(3,3,3),
         stunDuration = 0.5,
         interruptible = true
     },
     hit3 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5),
+        size = Vector3.new(3,3,3),
         stunDuration = 0.5,
         interruptible = true
     },
     hit4 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5),
+        size = Vector3.new(3,3,3),
         interruptible = true,
 
         endlag = 1.5,
@@ -110,7 +110,7 @@ MoveData.HitboxProperties = {
                 end,
                 timing = 0.25,
                 cframe = CFrame.new(0,-2,-3),
-                size = Vector3.new(5,4,5),
+                size = Vector3.new(3,5,3),
                 interruptible = true,
                 bypassRagdoll = true,
 
@@ -242,7 +242,7 @@ function MoveData:Work(_, inputState, _inputObj)
             -- hitbox stuff
             local queueHit = task.delay(hitboxProperty.timing, function()
                 local hitProperties = {}
-                local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, false)
+                local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
 
                 -- clientside hits

@@ -52,7 +52,7 @@ MoveData.HitboxProperties = {
     front = {
         timing = 0.8,
         cframe = CFrame.new(0,0,-2.5),
-        size = Vector3.new(4,4,5),
+        size = Vector3.new(3,3,3),
         stunDuration = 0.5,
         interruptible = false,
 
@@ -225,7 +225,7 @@ function MoveData:Work(_, inputState, _inputObj)
                 local hitboxProperty = self.HitboxProperties.front
                 task.delay(hitboxProperty.timing, function()
                     local hitProperties = {}
-                    local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, false)
+                    local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
                     hits = hitbox:FilterSelf(self.player.Character, hits)
 
                     -- clientside hits
