@@ -6,6 +6,9 @@ local rep = game:GetService("ReplicatedStorage")
 local uis = game:GetService("UserInputService")
 local moves = rep.Moves
 
+--- Private Variables ---
+local MovingRemote = Instance.new("BindableEvent")
+
 --- Public Variables ---
 local Input = {}
 Input.context = nil
@@ -15,6 +18,9 @@ Input.bindings = {}
 Input.connections = {}
 Input.moveModules = {}
 Input.CDTable = {}
+Input.canJump = true
+
+Input.MovingEvent = MovingRemote.Event
 
 Input.M1Properties = {
     moveName = nil,
@@ -87,7 +93,8 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
     if tick() - Input.CDTable[CDName] < cd then return end
     Input.CDTable[CDName] = tick()
 
-    -- run the move module
+    -- run the move module and fire the event
+    MovingRemote:Fire(CDName)
     moveMod:Work(actionName, inputState, _inputObj, extraData)
 end
 
@@ -116,7 +123,7 @@ function Input:Init(context)
 
     -- TODO: load actual bindings here
     Input.bindings.MouseButton1 = "fist"
-    Input.bindings.F = "fistblock"
+    Input.bindings.F = "fist"
     Input.bindings.Q = "fist"
     
     -- test i guess
@@ -181,7 +188,7 @@ function Input:Start()
             end
 
         else
-            if self.moving then SetJumpPower(0); return end
+            if self.moving or not self.canJump then SetJumpPower(0); return end
             SetJumpPower(50)
         end
      end)

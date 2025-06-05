@@ -55,11 +55,6 @@ MoveData.HitboxProperties = {
         size = Vector3.new(3,3,3),
         stunDuration = 0.5,
         interruptible = false,
-
-        endlag = 1.5,
-        endlagConditions = function(hitProperties)
-            return #hitProperties.HitList == 0
-        end,
     },
 }
 
@@ -95,11 +90,14 @@ end
 
 local function QueueDash(dir, char, dashStrength, linearVel)
 
+    local startingTick = tick()
+
     local raycastParams = RaycastParams.new()
     raycastParams.FilterDescendantsInstances = {char}
     raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
     local function checkInFront()
+        if tick() - startingTick < 0.5 then return end
         local hrp = char.HumanoidRootPart
         local ray = workspace:Raycast(hrp.Position, hrp.CFrame.LookVector * 3, raycastParams)
 
@@ -219,9 +217,9 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
 
                 -- dash stuff
                 local dashStrength = Instance.new("NumberValue")
-                dashStrength.Value = 60
+                dashStrength.Value = 80
 
-                local dashDecay = twn:Create(dashStrength, TweenInfo.new(0.8, Enum.EasingStyle.Linear), {Value = 0})
+                local dashDecay = twn:Create(dashStrength, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 0})
                 dashDecay:Play()
 
                 local dashUpdateLoop = QueueDash(dir, char, dashStrength, linearVel)
@@ -282,6 +280,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
             end
         else
             self.free = false
+            input.canJump = false
 
             -- prep linear velocity for dash
             local linearVel = char.HumanoidRootPart.Attachment.LinearVelocity
@@ -289,9 +288,9 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
 
             -- dash stuff
             local dashStrength = Instance.new("NumberValue")
-            dashStrength.Value = 75
+            dashStrength.Value = 140
 
-            local dashDecay = twn:Create(dashStrength, TweenInfo.new(self.properties.canMoveAgain, Enum.EasingStyle.Linear), {Value = 0})
+            local dashDecay = twn:Create(dashStrength, TweenInfo.new(self.properties.canMoveAgain, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 0})
             dashDecay:Play()
 
             local dashUpdateLoop = QueueDash(dir, char, dashStrength, linearVel)
@@ -306,6 +305,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                 linearVel.Enabled = false
                 gameSettings.RotationType = Enum.RotationType.MovementRelative
                 self.free = true
+                input.canJump = true
             end)
         end
     end
