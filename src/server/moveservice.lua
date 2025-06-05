@@ -83,7 +83,6 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     -- get move data
     local moveData = require(moves[moveFolder]:FindFirstChild(moveName))
     local hitboxProperties = moveData.HitboxProperties[hitDataName]
-    print(hitDataName)
 
     -- check if theres a hitbox variant
     if hitboxVariant then

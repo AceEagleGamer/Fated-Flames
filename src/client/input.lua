@@ -39,7 +39,7 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
 
     -- dont go if we're stunned or endlagged (is that the corect term)
     local core = Input.context.services.core
-    if playerChar:GetAttribute("Stunned") == true or core.playerState.endlag then return end
+    if playerChar:GetAttribute("Stunned") == true or core.playerState.endlag or playerChar:GetAttribute("IsRagdoll") == true then return end
 
     -- get move
     local parseMoveName = string.split(actionName, '/')
@@ -80,12 +80,12 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
     end
 
     -- check if we're off cooldown
-    local cd = moveMod:GetCooldown()
+    local cd, extraData = moveMod:GetCooldown()
     if tick() - Input.CDTable[CDName] < cd then return end
     Input.CDTable[CDName] = tick()
 
     -- run the move module
-    moveMod:Work(actionName, inputState, _inputObj)
+    moveMod:Work(actionName, inputState, _inputObj, extraData)
 end
 
 local function EvaluateM1(_, inputState, _inputObj)

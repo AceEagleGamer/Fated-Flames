@@ -44,21 +44,21 @@ MoveData.HitboxProperties = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(3,3,3),
-        stunDuration = 0.5,
+        stunDuration = 1.5,
         interruptible = true,
     },
     hit2 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(3,3,3),
-        stunDuration = 0.5,
+        stunDuration = 1.5,
         interruptible = true
     },
     hit3 = {
         timing = 0.25,
         cframe = CFrame.new(0,0,-2.5),
         size = Vector3.new(3,3,3),
-        stunDuration = 0.5,
+        stunDuration = 1.5,
         interruptible = true
     },
     hit4 = {
@@ -75,7 +75,7 @@ MoveData.HitboxProperties = {
         ragdolls = true,
         ragdollProperties = {
             knockbackStrength = 75,
-            duration = 1
+            duration = 1000 -- 2.5
         },
 
         variants = {
@@ -95,7 +95,7 @@ MoveData.HitboxProperties = {
                     knockback = Vector3.new(0,-1,0),
                     knockbackStrength = 120,
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
-                    duration = 1
+                    duration = 2.5
                 },
 
                 endlag = 1.5,
@@ -119,7 +119,7 @@ MoveData.HitboxProperties = {
                     knockback = Vector3.new(0,1,0),
                     knockbackStrength = 70,
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
-                    duration = 1
+                    duration = 2.5
                 },
 
                 endlag = 1.5,

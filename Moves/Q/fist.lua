@@ -73,9 +73,11 @@ MoveData.hitboxQueue = {}
 MoveData.player = nil
 MoveData.free = true
 MoveData.lastSwing = 0
+MoveData.OutOfDash = Instance.new("BindableEvent")
 
 --- Private Functions ---
 local function EvaluateDir()
+    if run:IsServer() then return end -- sigh
     if not localPlayer.Character or not localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character.Humanoid.Health <= 0 then return end
     local hum = localPlayer.Character.Humanoid
     local MoveDirection = camera.CFrame:VectorToObjectSpace(hum.MoveDirection)
@@ -92,6 +94,20 @@ local function EvaluateDir()
 end
 
 local function QueueDash(dir, char, dashStrength, linearVel)
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {char}
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+    local function checkInFront()
+        local hrp = char.HumanoidRootPart
+        local ray = workspace:Raycast(hrp.Position, hrp.CFrame.LookVector * 3, raycastParams)
+
+        if ray then
+            if ray.Instance:FindFirstAncestor("NPCs") or ray.Instance:FindFirstAncestor("PlayerCharacters") then return true end
+        end
+        return false
+    end
 
     return task.spawn(function()
         local hrp = char.HumanoidRootPart
@@ -110,8 +126,10 @@ local function QueueDash(dir, char, dashStrength, linearVel)
         elseif dir == "front" then
             while run.RenderStepped:Wait() do
                 linearVel.VectorVelocity = Vector3.new(hrp.CFrame.LookVector.X * dashStrength.Value, 0, hrp.CFrame.LookVector.Z * dashStrength.Value)
+                if checkInFront() then print("braking"); break end
             end
         end
+        MoveData.OutOfDash:Fire()
     end)
 end
 
@@ -123,7 +141,7 @@ end
 function MoveData:GetCooldown(variant)
     return if variant == "front" then self.properties.variants.front.cooldown else 
         (if run:IsServer() then self.properties.forwardCD else 
-            (if EvaluateDir() == "front" then self.properties.variants.front.cooldown else self.properties.cooldown)) -- really odd. but a workaround is a workaround
+            (if EvaluateDir() == "front" then self.properties.variants.front.cooldown else self.properties.cooldown)), EvaluateDir() -- really odd. but a workaround is a workaround
 end
 
 function MoveData:Tick()
@@ -166,7 +184,7 @@ function MoveData:Init(player: Player, context)
 
 end
 
-function MoveData:Work(_, inputState, _inputObj)
+function MoveData:Work(_, inputState, _inputObj, extraData)
     -- the move itself. visuals and hitbox
     if not self.free then return end
     --self.free = false
@@ -185,8 +203,7 @@ function MoveData:Work(_, inputState, _inputObj)
 
     if inputState == Enum.UserInputState.Begin then
 
-        -- evaluate dir
-        local dir = EvaluateDir()
+        local dir = extraData -- supplied by getting the cd. odd but whatever
         
         if dir == "front" then
             local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name, dir) -- takes move folder and move name, returns true or false
@@ -201,7 +218,7 @@ function MoveData:Work(_, inputState, _inputObj)
 
                 -- dash stuff
                 local dashStrength = Instance.new("NumberValue")
-                dashStrength.Value = 75
+                dashStrength.Value = 60
 
                 local dashDecay = twn:Create(dashStrength, TweenInfo.new(0.8, Enum.EasingStyle.Linear), {Value = 0})
                 dashDecay:Play()
@@ -209,46 +226,60 @@ function MoveData:Work(_, inputState, _inputObj)
                 local dashUpdateLoop = QueueDash(dir, char, dashStrength, linearVel)
 
                 -- play anim and rotate character accordingly
-                self.animations[dir]:Play()
+                self.animations["front_windup"]:Play()
                 self.sounds.dash:Play()
                 gameSettings.RotationType = Enum.RotationType.CameraRelative
 
                 -- handles end of dash
+                local endofDash = false
                 task.delay(frontProperties.canMoveAgain, function()
-                    task.cancel(dashUpdateLoop)
+                    if dashUpdateLoop then
+                        task.cancel(dashUpdateLoop)
+                        self.OutOfDash:Fire()
+                    end
+                    endofDash = true
                     linearVel.Enabled = false
                     gameSettings.RotationType = Enum.RotationType.MovementRelative
                     input.moving = false -- handle it here cuz we're handling everything else here anyway
                 end)
 
+                self.OutOfDash.Event:Wait() -- end of dash or ending early
+                self.animations["front_windup"]:Stop()
+                self.animations["front_hit"]:Play()
+
+                if not endofDash then
+                    linearVel.Enabled = false
+                    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0,0,0) -- reset velocity
+                    gameSettings.RotationType = Enum.RotationType.MovementRelative
+                    input.moving = false -- handle it here cuz we're handling everything else here anyway
+                end
+
                 -- hitbox troll
                 local hitboxProperty = self.HitboxProperties.front
-                task.delay(hitboxProperty.timing, function()
-                    local hitProperties = {}
-                    local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
-                    hits = hitbox:FilterSelf(self.player.Character, hits)
+                local hitProperties = {}
+                local hits = hitbox:Evaluate(self.player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
+                hits = hitbox:FilterSelf(self.player.Character, hits)
 
-                    -- clientside hits
-                    core:PlayHit(hits)
+                -- clientside hits
+                core:PlayHit(hits)
 
-                    -- evaluate conditions
-                    hitProperties.HitList = hits
+                -- evaluate conditions
+                hitProperties.HitList = hits
 
-                    -- serverside stuff
-                    events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`, nil, dir)
+                -- serverside stuff
+                events.Hit:FireServer(hitProperties, `{script.Parent.Name}/{script.Name}`, nil, dir)
 
-                    -- handle endlag if there is one
-                    if hitboxProperty.endlag then
-                        local conditionFulfilled = hitboxProperty.endlagConditions(hitProperties)
-                        if conditionFulfilled then
-                            core:Endlag(hitboxProperty.endlag)
-                            
-                        else
-                            task.wait(0.3)
-                            self.animations[dir]:AdjustSpeed(12)
-                        end
+                -- handle endlag if there is one
+                if hitboxProperty.endlag then
+                    local conditionFulfilled = hitboxProperty.endlagConditions(hitProperties)
+                    if conditionFulfilled then
+                        core:Endlag(hitboxProperty.endlag)
+                        
+                    else
+                        task.wait(0.3)
+                        self.animations[dir]:AdjustSpeed(12)
                     end
-                end)
+                end
             end
         else
 
@@ -261,7 +292,7 @@ function MoveData:Work(_, inputState, _inputObj)
 
             -- dash stuff
             local dashStrength = Instance.new("NumberValue")
-            dashStrength.Value = 100
+            dashStrength.Value = 75
 
             local dashDecay = twn:Create(dashStrength, TweenInfo.new(self.properties.canMoveAgain, Enum.EasingStyle.Linear), {Value = 0})
             dashDecay:Play()
