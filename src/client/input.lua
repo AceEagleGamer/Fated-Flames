@@ -79,6 +79,9 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
         CDName = `{moveFolder}/{moveName}/{variantChosen.name}`
     end
 
+    -- check if the move module is free
+    if not moveMod.free then return end
+
     -- check if we're off cooldown
     local cd, extraData = moveMod:GetCooldown()
     if tick() - Input.CDTable[CDName] < cd then return end

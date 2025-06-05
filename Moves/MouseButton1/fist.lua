@@ -75,7 +75,7 @@ MoveData.HitboxProperties = {
         ragdolls = true,
         ragdollProperties = {
             knockbackStrength = 75,
-            duration = 1000 -- 2.5
+            duration = 2.5
         },
 
         variants = {

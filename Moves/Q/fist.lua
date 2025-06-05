@@ -27,7 +27,7 @@ MoveData.properties = {
     variants = {
         front = {
             cooldown = 4,
-            canMoveAgain = 1.15,
+            canMoveAgain = 0.75,
             conditionFulfilled = function()
                 -- an exact copy paste of the function below but i wasnt moving the entire script so i can call the function
                 if not localPlayer.Character or not localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character.Humanoid.Health <= 0 then return end
@@ -208,6 +208,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
         if dir == "front" then
             local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name, dir) -- takes move folder and move name, returns true or false
             if moveGranted then
+                self.free = false
                 -- moving logic
                 input.moving = true
                 local frontProperties = self.properties.variants.front
@@ -231,28 +232,25 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                 gameSettings.RotationType = Enum.RotationType.CameraRelative
 
                 -- handles end of dash
-                local endofDash = false
                 task.delay(frontProperties.canMoveAgain, function()
                     if dashUpdateLoop then
                         task.cancel(dashUpdateLoop)
                         self.OutOfDash:Fire()
                     end
-                    endofDash = true
-                    linearVel.Enabled = false
-                    gameSettings.RotationType = Enum.RotationType.MovementRelative
-                    input.moving = false -- handle it here cuz we're handling everything else here anyway
                 end)
 
                 self.OutOfDash.Event:Wait() -- end of dash or ending early
                 self.animations["front_windup"]:Stop()
                 self.animations["front_hit"]:Play()
 
-                if not endofDash then
-                    linearVel.Enabled = false
-                    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0,0,0) -- reset velocity
-                    gameSettings.RotationType = Enum.RotationType.MovementRelative
+                linearVel.Enabled = false
+                char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0,0,0) -- reset velocity
+                gameSettings.RotationType = Enum.RotationType.MovementRelative
+                
+                -- you cant hit immediately after a dash hit!
+                task.delay(0.35, function()
                     input.moving = false -- handle it here cuz we're handling everything else here anyway
-                end
+                end)
 
                 -- hitbox troll
                 local hitboxProperty = self.HitboxProperties.front
@@ -277,14 +275,13 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                         
                     else
                         task.wait(0.3)
-                        self.animations[dir]:AdjustSpeed(12)
+                        self.animations["front_hit"]:AdjustSpeed(12)
                     end
                 end
+                self.free = true
             end
         else
-
-            -- moving logic
-            input.moving = true
+            self.free = false
 
             -- prep linear velocity for dash
             local linearVel = char.HumanoidRootPart.Attachment.LinearVelocity
@@ -308,7 +305,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                 task.cancel(dashUpdateLoop)
                 linearVel.Enabled = false
                 gameSettings.RotationType = Enum.RotationType.MovementRelative
-                input.moving = false -- handle it here cuz we're handling everything else here anyway
+                self.free = true
             end)
         end
     end
