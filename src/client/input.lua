@@ -29,13 +29,18 @@ Input.M1Properties = {
 
 Input.heldKeys = {
     m1 = false,
-    space = false
+    f = false,
 }
 
 Input.moving = false
+Input.blocking = false
 
 --- Private Functions ---
 local function EvaluateMoveInput(actionName, inputState, _inputObj)
+
+    -- if we're blocking or moving already then dont go
+    if Input.moving or Input.blocking then return end
+
     -- only handle if we're at the beginning of an input
     if inputState ~= Enum.UserInputState.Begin then return end
 
@@ -103,8 +108,8 @@ local function EvaluateM1(_, inputState, _inputObj)
     return Enum.ContextActionResult.Pass
 end
 
-local function EvaluateSpace(_, inputState, _inputObj)
-    Input.heldKeys.space = inputState == Enum.UserInputState.Begin
+local function EvaluateF(_, inputState, _inputObj)
+    Input.heldKeys.f = inputState == Enum.UserInputState.Begin
     return Enum.ContextActionResult.Pass
 end
 
@@ -123,7 +128,6 @@ function Input:Init(context)
 
     -- TODO: load actual bindings here
     Input.bindings.MouseButton1 = "fist"
-    Input.bindings.F = "fist"
     Input.bindings.Q = "fist"
     
     -- test i guess
@@ -143,6 +147,9 @@ function Input:Init(context)
         if self.connections[key] == nil then -- catch for nil. create the table ourselves
             self.connections[key] = {}
         end
+
+        -- dont bind for custom moves
+        if moveMod.DontBind then return end
         
         -- non m1 moves
         if moveMod.IsKey then
@@ -154,8 +161,8 @@ function Input:Init(context)
         end
     end
 
-    -- for spacebar
-    cas:BindAction('EvaluateJump', EvaluateSpace, false, Enum.KeyCode.Space)
+    -- blocking
+    cas:BindAction(`F`, EvaluateF, false, Enum.KeyCode.F)
 
     -- reset move mods on death
     self.connections.characterLoaded = player.CharacterAdded:Connect(function(char)
@@ -181,7 +188,7 @@ function Input:Start()
             local cd = moveMod:GetCooldown()
 
             -- dont go if we're below cd
-            if tick() - moveMod.lastSwing >= cd and not self.moving then
+            if tick() - moveMod.lastSwing >= cd then
                 EvaluateMoveInput(self.M1Properties.moveName, Enum.UserInputState.Begin)
 
                 SetJumpPower(if hitboxProperty[`hit{moveMod.comboString}`].canJump then 50 else 0)
@@ -190,6 +197,10 @@ function Input:Start()
         else
             if self.moving or not self.canJump then SetJumpPower(0); return end
             SetJumpPower(50)
+        end
+
+        if self.heldKeys.f then
+
         end
      end)
 end

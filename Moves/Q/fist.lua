@@ -134,6 +134,9 @@ end
 --- Public Functions ---
 function MoveData:ResetDefaults()
     -- reset move data basically
+    table.clear(self.animations)
+    table.clear(self.sounds)
+    self.player = nil
 end
 
 function MoveData:GetCooldown(variant)

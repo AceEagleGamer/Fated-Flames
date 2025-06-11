@@ -137,6 +137,7 @@ function MoveData:ResetDefaults()
     self.properties.cooldown = 0.45
 
     table.clear(self.animations)
+    table.clear(self.sounds)
     self.player = nil
 end
 
