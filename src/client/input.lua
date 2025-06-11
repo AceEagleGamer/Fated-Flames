@@ -200,7 +200,15 @@ function Input:Start()
         end
 
         if self.heldKeys.f then
+            -- logic to not send multiple events at once
+            if not self.blocking then
+                self.blocking = true
+            else
+                return
+            end
 
+            -- request a block
+            
         end
      end)
 end

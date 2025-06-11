@@ -39,6 +39,7 @@ local function QueueStun(char, stunDuration)
     end)
 end
 
+-- idk if i'll use this
 local function _preventJumping(char, duration)
 
         -- disconnect previous thread
@@ -116,6 +117,10 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     events.ReplicateHit:FireAllClients(player.Name, playersHit, moveData.HitboxProperties[`hit{moveData.comboString}`])
 end
 
+local function EvaluateBlock(player, blockType: string, state: boolean)
+
+end
+
 local function EvaluateRequest(player, moveFolder: string, moveName: string, variant)
 
     -- sanity checks
@@ -187,6 +192,7 @@ function MoveService:Start()
 
     -- not sure if i can store this callback in a table. wtv
     events.RequestMove.OnServerInvoke = EvaluateRequest
+    events.QueueMove.OnServerInvoke = EvaluateBlock
 
     -- temp for npcs
     for _, npc in workspace.NPCs:GetChildren() do
