@@ -69,6 +69,9 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     if not player.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = player.Character.HumanoidRootPart
 
+    -- prevent things from happening when stunned
+    if player.Character:GetAttribute("Stunned") == true or player.Character:GetAttribute("IsRagdoll") == true then return end
+
     -- data sanity check
     if hitProperties.HitList == nil then return end
     local hitTable = hitProperties.HitList
@@ -93,8 +96,7 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
 
     -- TODO: security checks. just hit them here doesnt matter
     local playersHit = {}
-    for _, hit in hitTable do
-
+    local function work(hit)
         hit:FindFirstChild("Humanoid"):TakeDamage(moveData.properties.damage)
         if playerService:GetPlayerFromCharacter(hit) then
             table.insert(playersHit, hit)
@@ -112,7 +114,21 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
             local kbDir = ragdollProperties.knockback or (hrp.Position - hit.HumanoidRootPart.Position).Unit
             services.ragdollservice:Work(hit, kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 1), hitboxProperties.ragdollProperties.duration, ragdollProperties.setCFrame)
         end
+    end
+    -- loop through hit table
+    for _, hit in hitTable do
 
+        -- check if we're blocking
+        local blocking = hit:GetAttribute("Blocking")
+        if blocking then
+            local dot = player.Character.HumanoidRootPart.CFrame.LookVector:Dot(hit.HumanoidRootPart.CFrame.LookVector)
+            if dot > 0.1 then -- facing the back
+                work(hit)
+                hit:SetAttribute("Blocking", false)
+            end
+        else
+            work(hit)
+        end
     end
 
     events.ReplicateHit:FireAllClients(player.Name, playersHit, moveData.HitboxProperties[`hit{moveData.comboString}`])
@@ -126,6 +142,9 @@ local function EvaluateBlockingState(player, state: boolean)
     if not playerState or not playerCDs then return false end
     if (state == true and tick() - playerCDs.lastBlockTick < 0.2) then return false end
     if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then return false end
+
+    -- prevent things from happening when stunned
+    if player.Character:GetAttribute("Stunned") == true or player.Character:GetAttribute("IsRagdoll") == true then return end
     
     -- set blocking to true on the server side and update last block tick
     player.Character:SetAttribute("Blocking", state)

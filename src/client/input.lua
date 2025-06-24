@@ -34,6 +34,7 @@ Input.heldKeys = {
 
 Input.moving = false
 Input.blocking = false
+Input.blockAnim = nil
 
 --- Private Functions ---
 local function EvaluateMoveInput(actionName, inputState, _inputObj)
@@ -168,12 +169,24 @@ function Input:Init(context)
     -- reset move mods on death
     self.connections.characterLoaded = player.CharacterAdded:Connect(function(char)
 
+        -- load block anim
+        self.blockAnim = char:WaitForChild("Humanoid").Animator:LoadAnimation(rep.BlockAnims.fistblock)
+
         -- loop through movemods and call ResetDefaults and Init
         for _, moveMod in self.moveModules do
 
             moveMod:ResetDefaults()
             moveMod:Init(player, context)
         end
+
+        -- play block anim here? if we have to reset the blocking anims, might as well do em here lol
+        char:GetAttributeChangedSignal("Blocking"):Connect(function()
+            if char:GetAttribute("Blocking") == true then
+                self.blockAnim:Play()
+            else
+                self.blockAnim:Stop()
+            end
+        end)
     
     end)
 end
@@ -207,16 +220,12 @@ function Input:Start()
                 self.blocking = true
 
                 -- send a message to server that we've started blocking
-                local success = rep.Events.UpdateBlockingState:InvokeServer(true)
+                local _success = rep.Events.UpdateBlockingState:InvokeServer(true)
 
                 -- reset cd
                 task.delay(0.2, function()
                     self.blockingCD = false
                 end)
-
-                if success then
-                    print("start blocking")
-                end
             end
 
         else
@@ -224,10 +233,7 @@ function Input:Start()
                 self.blocking = false
 
                 -- send a message to server that we've stopped blocking
-                local success = rep.Events.UpdateBlockingState:InvokeServer(false)
-                if success then
-                    print("stop blocking")
-                end
+                local _success = rep.Events.UpdateBlockingState:InvokeServer(false)
             end
         end
      end)

@@ -18,6 +18,7 @@ Core.characterAnims = {}
 Core.playerState = {
     endlag = false,
     stunned = false,
+    blocking = false,
     statuses = {},
 
     originalWalkspeed = 16, -- just set it to this for now
@@ -52,11 +53,17 @@ local function loadHitAnims(char)
     local animator = hum:FindFirstChild("Animator")
     if not animator then return end
 
-    for _, anim: Animation in rep.HitAnims:GetDescendants() do
-        if not anim:IsA("Animation") then continue end
-        animTracks[anim.Name] = animator:LoadAnimation(anim)
+    for _, animFolder in rep.HitAnims:GetChildren() do
+        animTracks[animFolder.Name] = {}
+        for _, anim in animFolder:GetChildren() do
+            if not anim:IsA("Animation") then continue end
+            animTracks[animFolder.Name][anim.Name] = animator:LoadAnimation(anim)
+        end
+
+
     end
     animTracks.currentlyPlaying = "nil"
+    animTracks.currentFolder = "nil"
 end
 
 local function PreventAnimationFromReplicating(anim)
@@ -102,36 +109,59 @@ function Core:Endlag(duration)
     -- TODO: register to the server
 end
 
-function Core:Attacking(moveData)
-
-end
-
-function Core:PlayHit(hitTable)
-    for _, char in hitTable do
+function Core:PlayHit(attacker, hitTable)
+    local function vfx(char, animFolder, isBlocked)
 
         -- play sound
-        local nSound: Sound = rep.MoveSFX.hitlanded:Clone()
-        nSound.Parent = char.HumanoidRootPart
-        nSound:Play()
-        game:GetService("Debris"):AddItem(nSound, nSound.TimeLength)
+        if not isBlocked then
+            local nSound: Sound = rep.MoveSFX.hitlanded:Clone()
+            nSound.Parent = char.HumanoidRootPart
+            nSound:Play()
+            game:GetService("Debris"):AddItem(nSound, nSound.TimeLength)
+        else
+            local nSound: Sound = rep.MoveSFX.hitblocked:Clone()
+            nSound.Parent = char.HumanoidRootPart
+            nSound:Play()
+            game:GetService("Debris"):AddItem(nSound, nSound.TimeLength)
+        end
         
         -- get anim table
         local animTracks = self.characterAnims[char]
-        if not animTracks then warn(`{char.Name} does not have anim tracks?`); continue end
+        if animTracks then
+            -- stop previous anim
+            if animTracks.currentlyPlaying ~= "nil" and animTracks.currentFolder ~= "nil" and animTracks[animTracks.currentFolder][animTracks.currentlyPlaying].IsPlaying then
+                animTracks[animTracks.currentFolder][animTracks.currentlyPlaying]:Stop()
+            end
 
-        -- stop previous anim
-        if animTracks.currentlyPlaying ~= "nil" and animTracks[animTracks.currentlyPlaying].IsPlaying then
-            animTracks[animTracks.currentlyPlaying]:Stop()
+            -- play new anim
+            local chosenAnim = animTracks[animFolder][`hit{math.random(1, #game.ReplicatedStorage.HitAnims[animFolder]:GetChildren())}`]
+            chosenAnim:Play()
+            animTracks.currentlyPlaying = chosenAnim.Animation.Name
+            animTracks.currentFolder = animFolder
+
+            chosenAnim.Ended:Connect(function()
+                animTracks.currentlyPlaying = "nil"
+                animTracks.currentFolder = "nil"
+            end)
+        else
+            warn("no anim tracks?")
         end
+    end
 
-        -- play new anim
-        local chosenAnim = animTracks[`hit{math.random(1,4)}`]
-        chosenAnim:Play()
-        animTracks.currentlyPlaying = chosenAnim.Animation.Name
+    for _, char in hitTable do
 
-        chosenAnim.Ended:Connect(function()
-            animTracks.currentlyPlaying = "nil"
-        end)
+        -- check if they're blocking
+        if char:GetAttribute("Blocking") == true then
+            local dot = attacker.HumanoidRootPart.CFrame.LookVector:Dot(char.HumanoidRootPart.CFrame.LookVector)
+            print(dot)
+            if dot > 0.1 then -- facing the back
+                vfx(char, "Default", false)
+            else
+                vfx(char, "fistblock", true)
+            end
+        else
+            vfx(char, "Default", false)
+        end
     end
 end
 
@@ -173,6 +203,13 @@ function Core:Init(context)
             self.playerState.remote:Fire()
         end)
 
+        -- block tracking
+        self.playerCons[localPlayer.UserId].isBlocking = char:GetAttributeChangedSignal("Blocking"):Connect(function()
+            self.playerState.blocking = char:GetAttribute("Blocking")
+            self.playerState.remote:Fire()
+        end)
+
+        -- ragdoll client side
         self.playerCons[localPlayer.UserId].ragdoll = events.RagdollClient.OnClientEvent:Connect(function(isRagdoll, kbDir)
             if not char:FindFirstChild("Humanoid") then return end
             if isRagdoll then
@@ -204,6 +241,9 @@ function Core:Init(context)
                     task.cancel(hit)
                 end
             end
+        elseif self.playerState.blocking then
+            localPlayer.Character:FindFirstChild("Humanoid").WalkSpeed = 5
+            localPlayer.Character:FindFirstChild("Humanoid").JumpPower = 0
         else
             localPlayer.Character:FindFirstChild("Humanoid").WalkSpeed = self.playerState.originalWalkspeed
             localPlayer.Character:FindFirstChild("Humanoid").JumpPower = self.playerState.originalJumpPower
@@ -230,7 +270,8 @@ function Core:Start()
     -- hit replication
     events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable, hitProperties)
         if player == localPlayer.Name then return end
-        self:PlayHit(hitTable)
+        print("test")
+        self:PlayHit(workspace.PlayerCharacters:FindFirstChild(player), hitTable)
 
         -- do some stun stuff here
     end)
