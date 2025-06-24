@@ -18,6 +18,7 @@ MoveService.debug = false
 MoveService.events = {}
 MoveService.connections = {}
 MoveService.playerCDs = {}
+MoveService.playerStates = {}
 
 MoveService.charThreads = {}
 
@@ -117,7 +118,7 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     events.ReplicateHit:FireAllClients(player.Name, playersHit, moveData.HitboxProperties[`hit{moveData.comboString}`])
 end
 
-local function EvaluateBlock(player, blockType: string, state: boolean)
+local function EvaluateBlockingState(player, state: boolean)
 
 end
 
@@ -153,6 +154,7 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string, var
     end
 
     local moveCD = moveData:GetCooldown(variant) - 0.1 -- to make it more lenient i guess
+    
     -- check CD timings
     if tick() - playerTable[CDName] < moveCD then warn(`[MoveService] {player.Name} requesting a move under cooldown`); return false end
     playerTable[`{moveFolder}{moveName}{variant}`] = tick()
@@ -192,7 +194,7 @@ function MoveService:Start()
 
     -- not sure if i can store this callback in a table. wtv
     events.RequestMove.OnServerInvoke = EvaluateRequest
-    events.QueueMove.OnServerInvoke = EvaluateBlock
+    events.UpdateBlockingState.OnServerInvoke = EvaluateBlockingState
 
     -- temp for npcs
     for _, npc in workspace.NPCs:GetChildren() do

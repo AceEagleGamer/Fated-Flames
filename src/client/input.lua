@@ -179,8 +179,8 @@ end
 
 function Input:Start()
      -- input loop
+     self.blockingCD = false
      self.connections.inputLoop = run.Heartbeat:Connect(function(dt)
-
         if self.heldKeys.m1 then
             -- check cd
             local moveMod = self.M1Properties.moveMod
@@ -201,14 +201,34 @@ function Input:Start()
 
         if self.heldKeys.f then
             -- logic to not send multiple events at once
-            if not self.blocking then
+            if not self.blocking and not self.blockingCD then
+                self.blockingCD = true
                 self.blocking = true
+
+                -- reset cd
+                task.delay(0.2, function()
+                    self.blockingCD = false
+                end)
+
+                -- send a message to server that we've started blocking
+                local success = rep.Events.UpdateBlockingState:InvokeServer(true)
+                if success then
+                    print("start blocking")
+                end
             else
                 return
             end
 
-            -- request a block
-            
+        else
+            if self.blocking then
+                self.blocking = false
+
+                -- send a message to server that we've stopped blocking
+                local success = rep.Events.UpdateBlockingState:InvokeServer(false)
+                if success then
+                    print("false blocking")
+                end
+            end
         end
      end)
 end
