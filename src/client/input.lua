@@ -109,6 +109,7 @@ local function EvaluateM1(_, inputState, _inputObj)
 end
 
 local function EvaluateF(_, inputState, _inputObj)
+    print(inputState)
     Input.heldKeys.f = inputState == Enum.UserInputState.Begin
     return Enum.ContextActionResult.Pass
 end
@@ -162,7 +163,7 @@ function Input:Init(context)
     end
 
     -- blocking
-    cas:BindAction(`F`, EvaluateF, false, Enum.KeyCode.F)
+    cas:BindAction(`blocking`, EvaluateF, false, Enum.KeyCode.F)
 
     -- reset move mods on death
     self.connections.characterLoaded = player.CharacterAdded:Connect(function(char)
@@ -205,18 +206,17 @@ function Input:Start()
                 self.blockingCD = true
                 self.blocking = true
 
+                -- send a message to server that we've started blocking
+                local success = rep.Events.UpdateBlockingState:InvokeServer(true)
+
                 -- reset cd
                 task.delay(0.2, function()
                     self.blockingCD = false
                 end)
 
-                -- send a message to server that we've started blocking
-                local success = rep.Events.UpdateBlockingState:InvokeServer(true)
                 if success then
                     print("start blocking")
                 end
-            else
-                return
             end
 
         else
@@ -226,7 +226,7 @@ function Input:Start()
                 -- send a message to server that we've stopped blocking
                 local success = rep.Events.UpdateBlockingState:InvokeServer(false)
                 if success then
-                    print("false blocking")
+                    print("stop blocking")
                 end
             end
         end

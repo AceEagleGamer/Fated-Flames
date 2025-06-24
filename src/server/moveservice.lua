@@ -120,6 +120,19 @@ end
 
 local function EvaluateBlockingState(player, state: boolean)
 
+    -- sanity checks
+    local playerState = MoveService.playerStates[player.UserId]
+    local playerCDs = MoveService.playerCDs[player.UserId]
+    if not playerState or not playerCDs then return false end
+    if (state == true and tick() - playerCDs.lastBlockTick < 0.2) then return false end
+    if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then return false end
+    
+    -- set blocking to true on the server side and update last block tick
+    player.Character:SetAttribute("Blocking", state)
+    playerCDs.lastBlockTick = tick()
+
+    -- accept the block
+    return true
 end
 
 local function EvaluateRequest(player, moveFolder: string, moveName: string, variant)
@@ -209,9 +222,16 @@ function MoveService:Start()
         -- register player threads table
         self.charThreads[player.UserId] = {}
 
+        -- register player move states (mostly just for m1s and blocks tbh)
+        self.playerStates[player.UserId] = {
+            m1 = false,
+            blocking = false,
+        }
+
         -- register records to player CDs
         self.playerCDs[player.UserId] = {
             lastMove = "nil",
+            lastBlockTick = 0,
             lastMoveTick = 0
         }
     end)
