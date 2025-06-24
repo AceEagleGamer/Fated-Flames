@@ -148,10 +148,7 @@ function Core:PlayHit(attacker, hitTable)
         end
     end
 
-    print(attacker, hitTable)
-
     for _, char in hitTable do
-        print(char)
 
         -- check if they're blocking
         if char:GetAttribute("Blocking") == true then

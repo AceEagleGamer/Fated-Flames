@@ -154,7 +154,7 @@ local function EvaluateBlockingState(player, state: boolean)
     return true
 end
 
-local function EvaluateRequest(player, moveFolder: string, moveName: string, variant)
+local function EvaluateRequest(player, moveFolder: string, moveName: string, variant, moveTick: string)
 
     -- sanity checks
     if not moves:FindFirstChild(moveFolder) then return false end
@@ -197,7 +197,7 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string, var
     playerTable.lastMoveTick = tick()
 
     -- replication here
-    events.ReplicateMove:FireAllClients(player, moveFolder, moveName)
+    events.ReplicateMove:FireAllClients(player, moveFolder, moveName, variant, moveTick)
 
     -- queue hit
    --[[ local hitboxProperty = moveData.HitboxProperties[`hit{moveData.comboString}`]

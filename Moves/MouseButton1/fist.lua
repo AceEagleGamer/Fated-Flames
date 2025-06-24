@@ -158,6 +158,18 @@ function MoveData:Tick()
     self.comboString += 1
 end
 
+function MoveData:TempTick()
+    local temp = self.comboString
+    if tick() - self.lastSwing >= self.properties.comboStringReset then
+        temp = 0
+    end
+
+    if self.comboString == 4 then self.comboString = 0 end -- reset
+    temp = self.comboString + 1
+    
+    return temp
+end
+
 function MoveData:Init(player: Player, context)
     if not player.Character then warn(`[MoveData] Waiting for character`); player.CharacterAdded:Wait(); return end
 
@@ -183,6 +195,10 @@ function MoveData:Init(player: Player, context)
     end
 end
 
+function MoveData:Replicate()
+
+end
+
 function MoveData:Work(_, inputState, _inputObj)
     if not self.free then return end
     self.free = false
@@ -200,9 +216,29 @@ function MoveData:Work(_, inputState, _inputObj)
     if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then self.free = true; return end
 
     if inputState == Enum.UserInputState.Begin then
+
+        -- get potential variant
+        -- check if we're at hit4, then check if any conditions can be fulfilled
+        local hitboxProperty = self.HitboxProperties[`hit{self:TempTick()}`]
+        local moveAnim = self.animations[`hit{self:TempTick()}`]
+        local moveSound = self.sounds[`hit{self:TempTick()}`]
+        local chosenVariant = nil
+        if hitboxProperty.variants then
+
+            for variantName, variantData in hitboxProperty.variants do
+                if variantData.conditionFulfilled() then
+                    moveAnim = self.animations[variantName]
+                    moveSound = self.sounds[variantName]
+
+                    chosenVariant = variantName
+                    hitboxProperty = variantData
+                    break
+                end
+            end
+        end
          
         -- request the server for a move
-        local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name) -- takes move folder and move name, returns true or false
+        local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name, chosenVariant, self:TempTick()) -- takes move folder and move name, returns true or false
         if moveGranted then
 
             -- moving logic
@@ -215,25 +251,6 @@ function MoveData:Work(_, inputState, _inputObj)
 
             -- stop previous anim (idk if this does anything)
             if self.animations[`hit{self.comboString - 1}`] then self.animations[`hit{self.comboString - 1}`]:Stop() end
-
-            -- check if we're at hit4, then check if any conditions can be fulfilled
-            local hitboxProperty = self.HitboxProperties[`hit{self.comboString}`]
-            local moveAnim = self.animations[`hit{self.comboString}`]
-            local moveSound = self.sounds[`hit{self.comboString}`]
-            local chosenVariant = nil
-            if hitboxProperty.variants then
-
-                for variantName, variantData in hitboxProperty.variants do
-                    if variantData.conditionFulfilled() then
-                        moveAnim = self.animations[variantName]
-                        moveSound = self.sounds[variantName]
-
-                        chosenVariant = variantName
-                        hitboxProperty = variantData
-                        break
-                    end
-                end
-            end
 
             MoveData.lastlastSwing = tick() -- die
             
