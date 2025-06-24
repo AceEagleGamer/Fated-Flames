@@ -113,6 +113,7 @@ MoveData.HitboxProperties = {
                 size = Vector3.new(3,5,3),
                 interruptible = true,
                 bypassRagdoll = true,
+                bypassBlocks = true,
 
                 ragdolls = true,
                 ragdollProperties = {

@@ -122,7 +122,7 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
         local blocking = hit:GetAttribute("Blocking")
         if blocking then
             local dot = player.Character.HumanoidRootPart.CFrame.LookVector:Dot(hit.HumanoidRootPart.CFrame.LookVector)
-            if dot > 0.1 then -- facing the back
+            if dot > 0.1 or hitboxProperties.bypassBlocks then -- facing the back
                 work(hit)
                 hit:SetAttribute("Blocking", false)
             end

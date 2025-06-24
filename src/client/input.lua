@@ -195,24 +195,8 @@ function Input:Start()
      -- input loop
      self.blockingCD = false
      self.connections.inputLoop = run.Heartbeat:Connect(function(dt)
-        if self.heldKeys.m1 then
-            -- check cd
-            local moveMod = self.M1Properties.moveMod
-            local hitboxProperty = moveMod.HitboxProperties
-            local cd = moveMod:GetCooldown()
-
-            -- dont go if we're below cd
-            if tick() - moveMod.lastSwing >= cd then
-                EvaluateMoveInput(self.M1Properties.moveName, Enum.UserInputState.Begin)
-
-                SetJumpPower(if hitboxProperty[`hit{moveMod.comboString}`].canJump then 50 else 0)
-            end
-
-        else
-            if self.moving or not self.canJump or self.blocking then SetJumpPower(0); return end
-            SetJumpPower(50)
-        end
-
+        
+        -- blocking
         if self.heldKeys.f then
             -- logic to not send multiple events at once
             if not self.blocking and not self.blockingCD then
@@ -235,6 +219,25 @@ function Input:Start()
                 -- send a message to server that we've stopped blocking
                 local _success = rep.Events.UpdateBlockingState:InvokeServer(false)
             end
+        end
+
+        -- m1
+        if self.heldKeys.m1 then
+            -- check cd
+            local moveMod = self.M1Properties.moveMod
+            local hitboxProperty = moveMod.HitboxProperties
+            local cd = moveMod:GetCooldown()
+
+            -- dont go if we're below cd
+            if tick() - moveMod.lastSwing >= cd then
+                EvaluateMoveInput(self.M1Properties.moveName, Enum.UserInputState.Begin)
+
+                SetJumpPower(if hitboxProperty[`hit{moveMod.comboString}`].canJump then 50 else 0)
+            end
+
+        else
+            if self.moving or not self.canJump or self.blocking then SetJumpPower(0); return end
+            SetJumpPower(50)
         end
      end)
 end
