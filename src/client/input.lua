@@ -209,7 +209,7 @@ function Input:Start()
             end
 
         else
-            if self.moving or not self.canJump then SetJumpPower(0); return end
+            if self.moving or not self.canJump or self.blocking then SetJumpPower(0); return end
             SetJumpPower(50)
         end
 
