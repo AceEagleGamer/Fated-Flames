@@ -148,12 +148,15 @@ function Core:PlayHit(attacker, hitTable)
         end
     end
 
+    print(attacker, hitTable)
+
     for _, char in hitTable do
+        print(char)
 
         -- check if they're blocking
         if char:GetAttribute("Blocking") == true then
+            print("test")
             local dot = attacker.HumanoidRootPart.CFrame.LookVector:Dot(char.HumanoidRootPart.CFrame.LookVector)
-            print(dot)
             if dot > 0.1 then -- facing the back
                 vfx(char, "Default", false)
             else
@@ -270,7 +273,6 @@ function Core:Start()
     -- hit replication
     events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable, hitProperties)
         if player == localPlayer.Name then return end
-        print("test")
         self:PlayHit(workspace.PlayerCharacters:FindFirstChild(player), hitTable)
 
         -- do some stun stuff here

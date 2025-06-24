@@ -98,9 +98,6 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     local playersHit = {}
     local function work(hit)
         hit:FindFirstChild("Humanoid"):TakeDamage(moveData.properties.damage)
-        if playerService:GetPlayerFromCharacter(hit) then
-            table.insert(playersHit, hit)
-        end
 
         -- stun if theres a stun duration
         if hitboxProperties.stunDuration then
@@ -117,6 +114,9 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     end
     -- loop through hit table
     for _, hit in hitTable do
+        if playerService:GetPlayerFromCharacter(hit) then
+            table.insert(playersHit, hit)
+        end
 
         -- check if we're blocking
         local blocking = hit:GetAttribute("Blocking")
