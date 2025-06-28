@@ -174,7 +174,7 @@ function MoveData:Init(player: Player, context)
     linearVel.Enabled = false
     linearVel.Attachment0 = velHolder
     linearVel.ForceLimitMode = Enum.ForceLimitMode.PerAxis
-    linearVel.MaxAxesForce = Vector3.new(math.huge, 0, math.huge)
+    linearVel.MaxAxesForce = Vector3.new(50000, 0, 50000)
     
     -- load anims i guess lol
     local anims = moveAnims.Q.fist:GetChildren()
@@ -298,7 +298,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
             local dashStrength = Instance.new("NumberValue")
             dashStrength.Value = 140
 
-            local dashDecay = twn:Create(dashStrength, TweenInfo.new(self.properties.canMoveAgain, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 0})
+            local dashDecay = twn:Create(dashStrength, TweenInfo.new(self.properties.canMoveAgain, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 10})
             dashDecay:Play()
 
             local dashUpdateLoop = QueueDash(dir, char, dashStrength, linearVel)
