@@ -34,8 +34,12 @@ MoveData.properties = {
     cooldown = 0,
     endCD = 1.5,
     comboStringReset = 1,
+
     damage = 5,
-    canMoveAgain = 0.45
+    postureDamage = 10,
+    
+    canMoveAgain = 0.45,
+    moveEndlag = 0.4
 }
 
 MoveData.HitboxProperties = {

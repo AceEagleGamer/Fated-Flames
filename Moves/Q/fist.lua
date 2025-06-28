@@ -22,8 +22,13 @@ MoveData.direction = 0
 
 MoveData.properties = {
     cooldown = 2,
-    canMoveAgain = 0.5,
+
     damage = 5,
+    postureDamage = 5,
+
+    canMoveAgain = 0.5,
+    moveEndlag = 0.5,
+
     variants = {
         front = {
             cooldown = 4,
