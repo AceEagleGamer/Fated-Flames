@@ -162,14 +162,14 @@ function MoveData:Tick()
     self.comboString += 1
 end
 
-function MoveData:TempTick()
-    local temp = self.comboString
+function MoveData:TempTick(curString)
+    local temp = curString
     if tick() - self.lastSwing >= self.properties.comboStringReset then
         temp = 0
     end
 
     if temp == 4 then temp = 0 end -- reset
-    temp = self.comboString + 1
+    temp = temp + 1
     
     return temp
 end
@@ -223,9 +223,9 @@ function MoveData:Work(_, inputState, _inputObj)
 
         -- get potential variant
         -- check if we're at hit4, then check if any conditions can be fulfilled
-        local hitboxProperty = self.HitboxProperties[`hit{self:TempTick()}`]
-        local moveAnim = self.animations[`hit{self:TempTick()}`]
-        local moveSound = self.sounds[`hit{self:TempTick()}`]
+        local hitboxProperty = self.HitboxProperties[`hit{self:TempTick(self.comboString)}`]
+        local moveAnim = self.animations[`hit{self:TempTick(self.comboString)}`]
+        local moveSound = self.sounds[`hit{self:TempTick(self.comboString)}`]
         local chosenVariant = nil
         if hitboxProperty.variants then
 
@@ -242,7 +242,7 @@ function MoveData:Work(_, inputState, _inputObj)
         end
          
         -- request the server for a move
-        local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name, chosenVariant, self:TempTick()) -- takes move folder and move name, returns true or false
+        local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name, chosenVariant, self:TempTick(self.comboString)) -- takes move folder and move name, returns true or false
         if moveGranted then
 
             -- moving logic
