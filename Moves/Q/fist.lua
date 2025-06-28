@@ -225,7 +225,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
 
                 -- dash stuff
                 local dashStrength = Instance.new("NumberValue")
-                dashStrength.Value = 100
+                dashStrength.Value = 90
 
                 local dashDecay = twn:Create(dashStrength, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 0})
                 dashDecay:Play()

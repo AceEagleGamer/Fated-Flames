@@ -53,7 +53,7 @@ local function EvaluateBlockingState(player, state: boolean)
     if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then return false end
 
     -- check if enough time has passed since the last move. Fun nesting
-    if playerCDs.lastMove and playerCDs.lastMove.properties.moveEndlag then
+    if playerCDs.lastMove ~= "nil" and playerCDs.lastMove.properties.moveEndlag then
         if (tick() - playerCDs.lastMoveTick) < playerCDs.lastMove.properties.moveEndlag then return false end
     end
 
