@@ -110,7 +110,6 @@ local function EvaluateM1(_, inputState, _inputObj)
 end
 
 local function EvaluateF(_, inputState, _inputObj)
-    print(inputState)
     Input.heldKeys.f = inputState == Enum.UserInputState.Begin
     return Enum.ContextActionResult.Pass
 end

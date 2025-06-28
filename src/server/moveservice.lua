@@ -47,9 +47,16 @@ local function EvaluateBlockingState(player, state: boolean)
     -- sanity checks
     local playerState = MoveService.playerStates[player.UserId]
     local playerCDs = MoveService.playerCDs[player.UserId]
+    local playerTable = MoveService.playerCDs[player.UserId]
+
     if not playerState or not playerCDs then return false end
     if (state == true and tick() - playerCDs.lastBlockTick < 0.2) then return false end
     if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then return false end
+
+    -- check if enough time has passed since the last move. Fun nesting
+    if playerTable.lastMove and playerTable.lastMove.moveEndlag then
+        if (tick() - playerTable.lastMoveTick) < playerTable.lastMove.moveEndlag then return false end
+    end
 
     -- prevent things from happening when stunned
     if player.Character:GetAttribute("Stunned") == true or player.Character:GetAttribute("IsRagdoll") == true then return end
@@ -67,6 +74,13 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string, var
     -- sanity checks
     if not moves:FindFirstChild(moveFolder) then return false end
     if not moves[moveFolder]:FindFirstChild(moveName) then return false end
+
+    -- check if we're alive
+    local playerChar = player.Character
+    if playerChar == nil or playerChar:FindFirstChild("Humanoid") == nil or playerChar.Humanoid.Health <= 0 then return false end
+
+    -- check if we're endlagged, stunned, or ragdolled
+    if playerChar:GetAttribute("Stunned") == true or playerChar:GetAttribute("IsRagdoll") == true then return end
 
     -- get player CDs
     local playerTable = MoveService.playerCDs[player.UserId]
