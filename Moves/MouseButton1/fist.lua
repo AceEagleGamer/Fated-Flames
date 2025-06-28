@@ -200,7 +200,7 @@ function MoveData:Init(player: Player, context)
 end
 
 function MoveData:Replicate(player, variant, moveTick)
-    
+
 end
 
 function MoveData:Work(_, inputState, _inputObj)
@@ -269,7 +269,7 @@ function MoveData:Work(_, inputState, _inputObj)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
 
                 -- clientside hits
-                core:PlayHit(self.player.Character, hits)
+                core:PlayHit(self.player.Character, hits, hitProperties)
 
                 -- evaluate conditions
                 hitProperties.HitList = hits

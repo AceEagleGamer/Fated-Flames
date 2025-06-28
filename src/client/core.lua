@@ -112,7 +112,7 @@ function Core:Endlag(duration)
     -- TODO: register to the server
 end
 
-function Core:PlayHit(attacker, hitTable)
+function Core:PlayHit(attacker, hitTable, hitboxProperties)
     local function vfx(char, animFolder, isBlocked)
 
         -- play sound
@@ -153,9 +153,11 @@ function Core:PlayHit(attacker, hitTable)
 
     for _, char in hitTable do
 
+        -- dont register if the hit is hitting a ragdolled character and we cant bypass ragdolls
+        if char:GetAttribute("IsRagdoll") == true and hitboxProperties.bypassRagdoll ~= true then continue end
+
         -- check if they're blocking
         if char:GetAttribute("Blocking") == true then
-            print("test")
             local dot = attacker.HumanoidRootPart.CFrame.LookVector:Dot(char.HumanoidRootPart.CFrame.LookVector)
             if dot > 0.1 then -- facing the back
                 vfx(char, "Default", false)
@@ -298,7 +300,7 @@ function Core:Start()
     -- hit replication
     events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable, hitProperties)
         if player == localPlayer.Name then return end
-        self:PlayHit(workspace.PlayerCharacters:FindFirstChild(player), hitTable)
+        self:PlayHit(workspace.PlayerCharacters:FindFirstChild(player), hitTable, hitProperties)
 
         -- do some stun stuff here
     end)

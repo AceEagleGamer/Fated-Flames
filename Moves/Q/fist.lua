@@ -268,7 +268,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                 hits = hitbox:FilterSelf(self.player.Character, hits)
 
                 -- clientside hits
-                core:PlayHit(self.player.Character, hits)
+                core:PlayHit(self.player.Character, hits, hitProperties)
 
                 -- evaluate conditions
                 hitProperties.HitList = hits
