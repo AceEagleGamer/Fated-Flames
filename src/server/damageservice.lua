@@ -71,7 +71,7 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     -- TODO: security checks. just hit them here doesnt matter
     local playersHit = {}
     local function work(hit)
-        --hit:FindFirstChild("Humanoid"):TakeDamage(moveData.properties.damage)
+        hit:FindFirstChild("Humanoid"):TakeDamage(moveData.properties.damage)
 
         -- stun if theres a stun duration
         if hitboxProperties.stunDuration then
@@ -88,6 +88,9 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     end
     -- loop through hit table
     for _, hit in hitTable do
+        -- dont register if the hit is hitting a ragdolled character and we cant bypass ragdolls
+        if hit:GetAttribute("IsRagdoll") == true and hitboxProperties.bypassRagdoll ~= true then continue end
+
         if playerService:GetPlayerFromCharacter(hit) then
             table.insert(playersHit, hit)
         end

@@ -304,7 +304,25 @@ function Core:Start()
     end)
 
     -- move replication
+    events.ReplicateMove.OnClientEvent:Connect(function(player, moveFolder, moveName, variant, moveTick)
+        
+        -- find move module
+        local moveFolder = rep:FindFirstChild(moveFolder)
+        if not moveFolder then return end
 
+        local moveMod = moveFolder:FindFirstChild(moveName)
+        if not moveMod then return end
+
+        moveMod = require(moveMod)
+
+        local success, err = pcall(function()  
+            moveMod:Replicate(player, variant, moveTick)
+        end)
+
+        if not success then
+            warn(`Failed to replicate {moveFolder}/{moveName}. Did we call the wrong move? Error: {err}`)
+        end
+    end)
 
     -- client prediction
     --self.playerCons[localPlayer.UserId].serverPrediction = run.Heartbeat:Connect(predictServerCFrame) -- should this be here?

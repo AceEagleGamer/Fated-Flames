@@ -187,6 +187,10 @@ function MoveData:Init(player: Player, context)
 
 end
 
+function MoveData:Replicate(player, variant, moveTick)
+    
+end
+
 function MoveData:Work(_, inputState, _inputObj, extraData)
     -- the move itself. visuals and hitbox
     if not self.free then return end

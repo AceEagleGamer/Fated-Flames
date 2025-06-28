@@ -199,8 +199,8 @@ function MoveData:Init(player: Player, context)
     end
 end
 
-function MoveData:Replicate()
-
+function MoveData:Replicate(player, variant, moveTick)
+    
 end
 
 function MoveData:Work(_, inputState, _inputObj)
