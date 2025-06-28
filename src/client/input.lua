@@ -200,23 +200,46 @@ function Input:Start()
             -- logic to not send multiple events at once
             if not self.blocking and not self.blockingCD then
                 self.blockingCD = true
-                self.blocking = true
-
+                
                 -- send a message to server that we've started blocking
-                local _success = rep.Events.UpdateBlockingState:InvokeServer(true)
+                local success = rep.Events.UpdateBlockingState:InvokeServer(true)
 
                 -- reset cd
-                task.delay(0.2, function()
-                    self.blockingCD = false
-                end)
+                if success then
+                    self.blocking = true
+                    task.delay(0.2, function()
+                        self.blockingCD = false
+                    end)
+                else
+                    self.blocking = false
+
+                    -- send another request in 100 ms
+                    task.delay(0.1, function()
+                        self.blockingCD = false
+                    end)
+                end
             end
 
         else
             if self.blocking then
-                self.blocking = false
 
                 -- send a message to server that we've stopped blocking
-                local _success = rep.Events.UpdateBlockingState:InvokeServer(false)
+                local success = rep.Events.UpdateBlockingState:InvokeServer(false)
+
+                -- dont ask me whats happening here. i hope it just doesnt break
+                if success then
+                    self.blocking = false
+                    task.delay(0.2, function()
+                        self.blockingCD = false
+                    end)
+                else
+                    self.blocking = false
+
+                    -- send another request in 100 ms
+                    task.delay(0.1, function()
+                        self.blocking = true
+                    end)
+                end
             end
         end
 
