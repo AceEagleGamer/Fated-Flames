@@ -168,7 +168,7 @@ function MoveData:TempTick()
         temp = 0
     end
 
-    if self.comboString == 4 then self.comboString = 0 end -- reset
+    if temp == 4 then temp = 0 end -- reset
     temp = self.comboString + 1
     
     return temp

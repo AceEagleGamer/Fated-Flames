@@ -275,6 +275,9 @@ function Core:Start()
         -- do some stun stuff here
     end)
 
+    -- move replication
+    
+
     -- client prediction
     --self.playerCons[localPlayer.UserId].serverPrediction = run.Heartbeat:Connect(predictServerCFrame) -- should this be here?
 end
