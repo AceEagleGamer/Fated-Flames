@@ -79,7 +79,10 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string, var
     if playerChar == nil or playerChar:FindFirstChild("Humanoid") == nil or playerChar.Humanoid.Health <= 0 then return false end
 
     -- check if we're endlagged, stunned, or ragdolled
-    if playerChar:GetAttribute("Stunned") == true or playerChar:GetAttribute("IsRagdoll") == true then return end
+    if playerChar:GetAttribute("Stunned") == true or playerChar:GetAttribute("IsRagdoll") == true then return false end
+
+    -- check if we're blocking
+    if playerChar:GetAttribute("Blocking") == true then return false end
 
     -- get player CDs
     local playerTable = MoveService.playerCDs[player.UserId]
