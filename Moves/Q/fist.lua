@@ -11,8 +11,6 @@ local moveSFX = rep.MoveSFX
 local events = rep.Events
 local camera = workspace.CurrentCamera
 
-local gameSettings = UserSettings().GameSettings
-
 --- Packages ---
 local hitbox = require(shared.hitbox)
 
@@ -157,7 +155,6 @@ end
 function MoveData:Init(player: Player, context)
     -- only to get context and maybe some extra setup stuff
     if not localPlayer.Character then warn(`[MoveData] Waiting for character`); localPlayer.CharacterAdded:Wait(); return end
-    gameSettings.RotationType = Enum.RotationType.MovementRelative
 
     self.context = context
     self.player = localPlayer
@@ -219,13 +216,16 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                 input.moving = true
                 local frontProperties = self.properties.variants.front
 
+                -- set char to follow cam direction
+                core.playerState.followingCamDir = true
+
                 -- prep linear velocity for dash
                 local linearVel = char.HumanoidRootPart.Attachment.LinearVelocity
                 linearVel.Enabled = true
 
                 -- dash stuff
                 local dashStrength = Instance.new("NumberValue")
-                dashStrength.Value = 80
+                dashStrength.Value = 100
 
                 local dashDecay = twn:Create(dashStrength, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 0})
                 dashDecay:Play()
@@ -235,7 +235,6 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                 -- play anim and rotate character accordingly
                 self.animations["front_windup"]:Play()
                 self.sounds.dash:Play()
-                gameSettings.RotationType = Enum.RotationType.CameraRelative
 
                 -- handles end of dash
                 task.delay(frontProperties.canMoveAgain, function()
@@ -246,12 +245,12 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                 end)
 
                 self.OutOfDash.Event:Wait() -- end of dash or ending early
+                core.playerState.followingCamDir = false
                 self.animations["front_windup"]:Stop()
                 self.animations["front_hit"]:Play()
 
                 linearVel.Enabled = false
                 char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0,0,0) -- reset velocity
-                gameSettings.RotationType = Enum.RotationType.MovementRelative
                 
                 -- you cant hit immediately after a dash hit!
                 task.delay(0.35, function()
@@ -294,9 +293,11 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
             local linearVel = char.HumanoidRootPart.Attachment.LinearVelocity
             linearVel.Enabled = true
 
+            core.playerState.followingCamDir = true
+
             -- dash stuff
             local dashStrength = Instance.new("NumberValue")
-            dashStrength.Value = 140
+            dashStrength.Value = 120
 
             local dashDecay = twn:Create(dashStrength, TweenInfo.new(self.properties.canMoveAgain, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 10})
             dashDecay:Play()
@@ -306,12 +307,11 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
             -- play anim and rotate character accordingly
             self.animations[dir]:Play()
             self.sounds.dash:Play()
-            gameSettings.RotationType = Enum.RotationType.CameraRelative
 
             task.delay(self.properties.canMoveAgain, function()
                 task.cancel(dashUpdateLoop)
+                core.playerState.followingCamDir = false
                 linearVel.Enabled = false
-                gameSettings.RotationType = Enum.RotationType.MovementRelative
                 self.free = true
                 input.canJump = true
             end)

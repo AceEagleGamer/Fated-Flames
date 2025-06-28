@@ -1,6 +1,7 @@
 --- References ---
 local rep = game:GetService("ReplicatedStorage")
---local run = game:GetService("RunService")
+local run = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
 local playerService = game:GetService("Players")
 local localPlayer = playerService.LocalPlayer
 local events = rep.Events
@@ -12,6 +13,7 @@ Core.context = nil
 Core.connections = {}
 Core.animBlacklist = {}
 Core.playerCons = {}
+Core.playerThreads = {}
 
 Core.animCons = {}
 Core.characterAnims = {}
@@ -19,6 +21,7 @@ Core.playerState = {
     endlag = false,
     stunned = false,
     blocking = false,
+    followingCamDir = false,
     statuses = {},
 
     originalWalkspeed = 16, -- just set it to this for now
@@ -224,6 +227,31 @@ function Core:Init(context)
         end)
 
         loadHitAnims(char)
+
+        -- do cam stuff here
+        local cam = workspace.CurrentCamera
+        cam.CameraSubject = char:WaitForChild("Head")
+
+        -- break previous thread then make a new one
+        if self.playerThreads.shiftlockFix then
+            self.playerThreads.shiftlockFix:Disconnect()
+        end
+
+        local hum = char:WaitForChild("Humanoid")
+        self.playerThreads.shiftlockFix = run.RenderStepped:Connect(function()
+            if not char or not hum then
+                return
+            end
+            
+            if uis.MouseBehavior == Enum.MouseBehavior.LockCenter or self.playerState.followingCamDir then
+                hum.AutoRotate = false --We set the Humanoid's AutoRotate to true if we aren't in shift lock mode.
+                local _X, Y, _Z = cam.CFrame:ToOrientation()
+                char.HumanoidRootPart.CFrame = CFrame.new(char.HumanoidRootPart.Position) * CFrame.fromOrientation(0, Y, 0)
+            else
+                hum.AutoRotate = true
+            end
+
+        end)
     end)
 
     -- handle endlag/stunned
@@ -276,7 +304,7 @@ function Core:Start()
     end)
 
     -- move replication
-    
+
 
     -- client prediction
     --self.playerCons[localPlayer.UserId].serverPrediction = run.Heartbeat:Connect(predictServerCFrame) -- should this be here?
