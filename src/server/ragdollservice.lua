@@ -3,6 +3,10 @@ local Ragdoll = {}
 
 Ragdoll.cons = {}
 Ragdoll.context = nil
+Ragdoll.ragdollThreads = {
+	players = {},
+	npcs = {}
+}
 
 --- Private Variables ---
 local events = game:GetService("ReplicatedStorage").Events
@@ -93,6 +97,10 @@ function Setup(char)
 	char:SetAttribute("IsRagdoll", false)
 end
 
+function EvaluateRagdollCancel(player)
+	print("sent request")
+end
+
 --- Public Functions ---
 function Ragdoll:Init(context)
     self.context = context
@@ -111,7 +119,7 @@ function Ragdoll:Work(Character, knockbackDirection, ragdollDuration, setCFrame)
 		Character:SetAttribute("IsRagdoll", true)
 		events.RagdollClient:FireClient(player, true, knockbackDirection)
 
-		task.delay(ragdollDuration, function()
+		self.ragdollThreads.players[Character.Name] = task.delay(ragdollDuration, function()
 			events.RagdollClient:FireClient(player, nil)
 			Character:SetAttribute("IsRagdoll", false)
 		end)
@@ -125,7 +133,8 @@ function Ragdoll:Work(Character, knockbackDirection, ragdollDuration, setCFrame)
 
 		Character.HumanoidRootPart.AssemblyLinearVelocity = -knockbackDirection
 
-		task.delay(ragdollDuration, function()
+		self.ragdollThreads.npcs[Character] = task.delay(ragdollDuration, function()
+			if Character == nil or (Character:FindFirstChild("Humanoid") and Character:FindFirstChild("Humanoid").Health <= 0) then return end
 			Character.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
 			Character:SetAttribute("IsRagdoll", false)
 		end)
@@ -135,6 +144,7 @@ end
 function Ragdoll:Start()
 	local context = self.context
 	local services = context.services
+
 	--- NPCs ---
 	for _, npc in workspace.NPCs:GetChildren() do -- TODO: replace this when we do actual npcs\
 		self.cons[npc] = {}
@@ -186,6 +196,8 @@ function Ragdoll:Start()
 		table.clear(self.cons[player.UserId])
 	end)
 
+	-- setup ragdoll cancel listener
+	events.RequestMove.OnServerInvoke = EvaluateRagdollCancel
 end
 
 return Ragdoll

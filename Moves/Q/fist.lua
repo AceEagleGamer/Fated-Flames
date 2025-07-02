@@ -32,11 +32,15 @@ MoveData.properties = {
             cooldown = 4,
             canMoveAgain = 0.75,
             conditionFulfilled = function()
-                -- an exact copy paste of the function below but i wasnt moving the entire script so i can call the function
                 if not localPlayer.Character or not localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character.Humanoid.Health <= 0 then return end
-                local hum = localPlayer.Character.Humanoid
-                local MoveDirection = camera.CFrame:VectorToObjectSpace(hum.MoveDirection)
-                    
+                local PlayerScripts = localPlayer:WaitForChild("PlayerScripts")
+                local PlayerModule = require(PlayerScripts:WaitForChild("PlayerModule"))
+                local ControlModule = PlayerModule:GetControls()
+
+                local _hum = localPlayer.Character.Humanoid
+                local MoveDirection = ControlModule:GetMoveVector() or Vector3.new()
+                --local MoveDirection = camera.CFrame:VectorToObjectSpace(moveVector)
+
                 -- evaluate direction
                 local dir = nil
                 if math.round(MoveDirection.X) == -1 then dir = "left" end
@@ -75,11 +79,16 @@ MoveData.OutOfDash = Instance.new("BindableEvent")
 
 --- Private Functions ---
 local function EvaluateDir()
-    if run:IsServer() then return end -- sigh
+    if run:IsServer() then return end
     if not localPlayer.Character or not localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character.Humanoid.Health <= 0 then return end
-    local hum = localPlayer.Character.Humanoid
-    local MoveDirection = camera.CFrame:VectorToObjectSpace(hum.MoveDirection)
-        
+    local PlayerScripts = localPlayer:WaitForChild("PlayerScripts")
+    local PlayerModule = require(PlayerScripts:WaitForChild("PlayerModule"))
+    local ControlModule = PlayerModule:GetControls()
+
+    local _hum = localPlayer.Character.Humanoid
+    local MoveDirection = ControlModule:GetMoveVector() or Vector3.new()
+    --local MoveDirection = camera.CFrame:VectorToObjectSpace(moveVector)
+
     -- evaluate direction
     local dir = nil
     if math.round(MoveDirection.X) == -1 then dir = "left" end
@@ -213,6 +222,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
         local dir = extraData -- supplied by getting the cd. odd but whatever
         
         if dir == "front" then
+            if char:GetAttribute("IsRagdoll") == true then self.free = true; return end
             local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name, dir) -- takes move folder and move name, returns true or false
             if moveGranted then
                 self.free = false
@@ -290,6 +300,14 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
                 self.free = true
             end
         else
+
+            -- special condition for ragdoll cancel
+            if char:GetAttribute("IsRagdoll") == true then
+                local status = events.RequestRagdollCancel:InvokeServer()
+                if status == false then
+                    return
+                end
+            end
             self.free = false
             input.canJump = false
 
@@ -321,6 +339,7 @@ function MoveData:Work(_, inputState, _inputObj, extraData)
             end)
         end
     end
+    self.free = true
 end
 
 return MoveData

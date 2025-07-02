@@ -124,7 +124,7 @@ MoveData.HitboxProperties = {
                     knockback = Vector3.new(0,1,0),
                     knockbackStrength = 70,
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
-                    duration = 2.5
+                    duration = 5000--2.5
                 },
 
                 endlag = 1.5,
@@ -200,7 +200,7 @@ function MoveData:Init(player: Player, context)
 end
 
 function MoveData:Replicate(player, variant, moveTick)
-
+    print(player, variant, moveTick)
 end
 
 function MoveData:Work(_, inputState, _inputObj)

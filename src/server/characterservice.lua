@@ -49,8 +49,11 @@ local function onCharacterAdded(player: Player, char)
     char:SetAttribute("Blocking", false)
     char:SetAttribute("Stunned", false)
     char:SetAttribute("StunImmunity", false)
+    char:SetAttribute("Hyperarmor", false)
+    char:SetAttribute("RagdollCancelOnCooldown", false)
 
     char:SetAttribute("Posture", 50)
+    char:SetAttribute("RagdollCancelCooldownDuration", 15)
 
     -- set up events
     local hum = char:WaitForChild("Humanoid")

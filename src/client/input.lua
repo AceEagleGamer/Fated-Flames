@@ -51,12 +51,19 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
 
     -- dont go if we're stunned or endlagged (is that the corect term)
     local core = Input.context.services.core
-    if playerChar:GetAttribute("Stunned") == true or core.playerState.endlag or playerChar:GetAttribute("IsRagdoll") == true then return end
+    if playerChar:GetAttribute("Stunned") == true or core.playerState.endlag then return end
 
     -- get move
     local parseMoveName = string.split(actionName, '/')
     local moveFolder = parseMoveName[1]
     local moveName = parseMoveName[2]
+
+    -- special condition for ragdoll cancelling with Q
+    if playerChar:GetAttribute("IsRagdoll") == true then
+        if moveFolder ~= "Q" then
+            return
+        end
+    end
 
     -- check if it exists
     if not moves:FindFirstChild(moveFolder) then return end

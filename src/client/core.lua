@@ -306,10 +306,10 @@ function Core:Start()
     end)
 
     -- move replication
-    events.ReplicateMove.OnClientEvent:Connect(function(player, moveFolder, moveName, variant, moveTick)
+    events.ReplicateMove.OnClientEvent:Connect(function(player, moveFolderName, moveName, variant, moveTick)
         
         -- find move module
-        local moveFolder = rep:FindFirstChild(moveFolder)
+        local moveFolder = rep:FindFirstChild(moveFolderName)
         if not moveFolder then return end
 
         local moveMod = moveFolder:FindFirstChild(moveName)
