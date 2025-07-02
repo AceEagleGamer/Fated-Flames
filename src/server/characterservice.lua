@@ -48,7 +48,7 @@ local function onCharacterAdded(player: Player, char)
     -- set up attributes
     char:SetAttribute("Blocking", false)
     char:SetAttribute("Stunned", false)
-    char:SetAttribute("StunImmunity", false)
+    char:SetAttribute("Staggered", false)
     char:SetAttribute("Hyperarmor", false)
 
     char:SetAttribute("Posture", 50)

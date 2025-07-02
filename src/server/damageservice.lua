@@ -102,6 +102,9 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
             if dot > 0.1 or hitboxProperties.bypassBlocks then -- facing the back
                 work(hit)
                 hit:SetAttribute("Blocking", false)
+            else
+                -- damage posture
+                hit:SetAttribute("Posture", hit:GetAttribute("Posture") - moveData.properties.postureDamage or 5)
             end
         else
             work(hit)
