@@ -7,6 +7,7 @@ Ragdoll.ragdollThreads = {
 	players = {},
 	npcs = {}
 }
+Ragdoll.ragdollCancelCDs = {}
 
 --- Private Variables ---
 local events = game:GetService("ReplicatedStorage").Events
@@ -98,7 +99,32 @@ function Setup(char)
 end
 
 function EvaluateRagdollCancel(player)
-	print("sent request")
+
+	-- check if we exist
+    local playerChar = player.Character
+    if playerChar == nil or playerChar:FindFirstChild("Humanoid") == nil or playerChar.Humanoid.Health <= 0 then return false end
+
+	-- catch for nil
+	if Ragdoll.ragdollCancelCDs[player] == nil then
+		Ragdoll.ragdollCancelCDs[player] = 0
+	end
+
+	-- check if we're ragdolled in the first place
+	if playerChar:GetAttribute("IsRagdoll") == false then return false end
+
+	-- check if we're above ragdoll cancel cd
+	if tick() - Ragdoll.ragdollCancelCDs[player] >= playerChar:GetAttribute("RagdollCancelCooldownDuration") then
+		if Ragdoll.ragdollThreads.players[player.Name] then
+			task.cancel(Ragdoll.ragdollThreads.players[player.Name])
+		end
+
+		events.RagdollClient:FireClient(player, nil)
+		playerChar:SetAttribute("IsRagdoll", false)
+		Ragdoll.ragdollCancelCDs[player] = tick()
+
+		return true
+	end
+	return false
 end
 
 --- Public Functions ---
@@ -197,7 +223,7 @@ function Ragdoll:Start()
 	end)
 
 	-- setup ragdoll cancel listener
-	events.RequestMove.OnServerInvoke = EvaluateRagdollCancel
+	events.RequestRagdollCancel.OnServerInvoke = EvaluateRagdollCancel
 end
 
 return Ragdoll
