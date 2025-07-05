@@ -33,7 +33,7 @@ MoveData.lastlastSwing = 0 -- why
 MoveData.properties = {
     cooldown = 0,
     endCD = 1.5,
-    comboStringReset = 1,
+    comboStringReset = 4,
 
     damage = 5,
     postureDamage = 10,
@@ -99,7 +99,7 @@ MoveData.HitboxProperties = {
                     knockback = Vector3.new(0,-1,0),
                     knockbackStrength = 120,
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
-                    duration = 2.5
+                    duration = 2
                 },
 
                 endlag = 1.5,
@@ -124,7 +124,7 @@ MoveData.HitboxProperties = {
                     knockback = Vector3.new(0,1,0),
                     knockbackStrength = 70,
                     setCFrame = CFrame.new(0,0,0) * CFrame.Angles(math.rad(90),0,0),
-                    duration = 5000--2.5
+                    duration = 2
                 },
 
                 endlag = 1.5,
@@ -223,9 +223,10 @@ function MoveData:Work(_, inputState, _inputObj)
 
         -- get potential variant
         -- check if we're at hit4, then check if any conditions can be fulfilled
-        local hitboxProperty = self.HitboxProperties[`hit{self:TempTick(self.comboString)}`]
-        local moveAnim = self.animations[`hit{self:TempTick(self.comboString)}`]
-        local moveSound = self.sounds[`hit{self:TempTick(self.comboString)}`]
+        local tempTick = self:TempTick(self.comboString)
+        local hitboxProperty = self.HitboxProperties[`hit{tempTick}`]
+        local moveAnim = self.animations[`hit{tempTick}`]
+        local moveSound = self.sounds[`hit{tempTick}`]
         local chosenVariant = nil
         if hitboxProperty.variants then
 
@@ -242,7 +243,7 @@ function MoveData:Work(_, inputState, _inputObj)
         end
          
         -- request the server for a move
-        local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name, chosenVariant, self:TempTick(self.comboString)) -- takes move folder and move name, returns true or false
+        local moveGranted = events.RequestMove:InvokeServer(script.Parent.Name, script.Name, chosenVariant, `hit{tempTick}`) -- takes move folder and move name, returns true or false
         if moveGranted then
 
             -- moving logic
