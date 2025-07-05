@@ -199,7 +199,7 @@ function MoveData:Init(player: Player, context)
     end
 end
 
-function MoveData:Replicate(player, variant, moveTick)
+function MoveData:RenderVFX(player, variant, moveTick)
     print(player, variant, moveTick)
 end
 

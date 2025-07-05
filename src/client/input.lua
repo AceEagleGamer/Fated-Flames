@@ -8,6 +8,8 @@ local moves = rep.Moves
 
 --- Private Variables ---
 local MovingRemote = Instance.new("BindableEvent")
+local ChangeM1State = rep.Events.UpdateM1State
+local ChangeBlockingState = rep.Events.ChangeBlockingState
 
 --- Public Variables ---
 local Input = {}
@@ -203,7 +205,7 @@ function Input:Start()
      self.connections.inputLoop = run.Heartbeat:Connect(function(dt)
         
         -- blocking
-        if self.heldKeys.f then
+        --[[if self.heldKeys.f then
             -- logic to not send multiple events at once
             if not self.blocking and not self.blockingCD then
                 self.blockingCD = true
@@ -267,7 +269,7 @@ function Input:Start()
         else
             if self.moving or not self.canJump or self.blocking then SetJumpPower(0); return end
             SetJumpPower(50)
-        end
+        end]]
      end)
 end
 
