@@ -113,14 +113,14 @@ function EvaluateRagdollCancel(player)
 	if playerChar:GetAttribute("IsRagdoll") == false then return false end
 
 	-- check if we're above ragdoll cancel cd
-	if tick() - Ragdoll.ragdollCancelCDs[player] >= playerChar:GetAttribute("RagdollCancelCooldownDuration") then
+	if time() - Ragdoll.ragdollCancelCDs[player] >= playerChar:GetAttribute("RagdollCancelCooldownDuration") then
 		if Ragdoll.ragdollThreads.players[player.Name] then
 			task.cancel(Ragdoll.ragdollThreads.players[player.Name])
 		end
 
 		events.RagdollClient:FireClient(player, nil)
 		playerChar:SetAttribute("IsRagdoll", false)
-		Ragdoll.ragdollCancelCDs[player] = tick()
+		Ragdoll.ragdollCancelCDs[player] = time()
 
 		return true
 	end

@@ -8,8 +8,8 @@ local moves = rep.Moves
 
 --- Private Variables ---
 local MovingRemote = Instance.new("BindableEvent")
-local ChangeM1State = rep.Events.UpdateM1State
-local ChangeBlockingState = rep.Events.ChangeBlockingState
+local UpdateM1State = rep.Events.UpdateM1State
+local UpdateBlockingState = rep.Events.UpdateBlockingState
 
 --- Public Variables ---
 local Input = {}

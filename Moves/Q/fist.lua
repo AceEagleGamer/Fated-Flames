@@ -102,14 +102,14 @@ end
 
 local function QueueDash(dir, char, dashStrength, linearVel)
 
-    local startingTick = tick()
+    local startingTick = time()
 
     local raycastParams = RaycastParams.new()
     raycastParams.FilterDescendantsInstances = {char}
     raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
     local function checkInFront()
-        if tick() - startingTick < 0.5 then return end
+        if time() - startingTick < 0.5 then return end
         local hrp = char.HumanoidRootPart
         local ray = workspace:Raycast(hrp.Position, hrp.CFrame.LookVector * 3, raycastParams)
 

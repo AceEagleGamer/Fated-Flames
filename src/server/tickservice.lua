@@ -19,11 +19,11 @@ TickService.context = nil
 
 -- configs
 TickService.DesiredTPS = 20
-TickService.LastTick = tick()
+TickService.LastTick = time()
 TickService.CurrentTPS = 20 -- analytics case
 
 -- references
-TickService.Updated = nil
+TickService.Update = nil
 
 --- Public Functions ---
 function TickService:Init(context)
@@ -31,14 +31,14 @@ function TickService:Init(context)
 
     -- set up events
     UpdateEvent = Instance.new("BindableEvent")
-    self.Updated = UpdateEvent.Event -- set to readonly
+    self.Update = UpdateEvent.Event -- set to readonly
 
     -- setup loop
     local TickWaitTime = 1 / self.DesiredTPS
     TickService.CurrentTickThread = task.spawn(function()
         while true do
             task.wait(TickWaitTime)
-            local currentTick = tick()
+            local currentTick = time()
             
             -- fire the event
             local dt = currentTick - self.LastTick

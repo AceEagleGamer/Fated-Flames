@@ -3,9 +3,15 @@
 --- References ---
 local players = game:GetService("Players")
 local rep = game:GetService("ReplicatedStorage")
+local ss = game:GetService("ServerStorage")
+
 local events = rep.Events
 local packages = rep.Packages
---local ProfileStore = require(game:GetService("ReplicatedStorage").Packages.profilestore)
+local classes = ss.Classes
+
+-- classes
+local PlayerClass = require(classes.player) -- ignore error idk why it thinks it doesnt exist
+local ProfileStore = require(game:GetService("ReplicatedStorage").Packages.profilestore)
 
 --- Public Variables ---
 local PlayerService = {}
@@ -14,7 +20,6 @@ PlayerService.players = {}
 PlayerService.connections = {}
 PlayerService.events = {}
 PlayerService.context = nil
-PlayerService.debug = false
 
 --- Private Variables ---
 local InternalEvents = {
@@ -30,44 +35,33 @@ local function LoadPlayerData(player: Player)
 end
 
 local function PlayerJoining(player: Player)
-    local self = PlayerService
-    
-    -- register player via their id
-    self.players[player.UserId] = {
-        player_object = player,
-        character_model = nil,
-        connections = {},
-    }
 
-    -- debug purposes
-    if self.debug then
-        print(`[PlayerService] Registering {player.Name}`)
-        --print(self.players)
-    end
+    -- create a new player
+    local newPlayerObj = PlayerClass.new(player)
+    PlayerService.players[player.UserId] = newPlayerObj
+
+    -- analytics
+    print(`[PlayerService] Registering {player.Name}`)
 
     -- load data
     LoadPlayerData(player)
 
-    -- after work is done, fire emote
+    -- fire remote
     InternalEvents.PlayerJoining:Fire(player)
 end
 
 local function PlayerLeaving(player: Player)
-    local self = PlayerService
 
-    -- debug purposes
-    if self.debug then
-        --print(self.players)
-        print(`[PlayerService] De-registering {player.Name}`)
-    end
+    -- analytics
+    print(`[PlayerService] De-registering {player.Name}`)
 
-    -- find the registered player
-    local check_player = self.players[player.UserId]
+    -- search for player obj and call its deconstructor
+    local check_player = PlayerService.players[player.UserId]
     if check_player then
-        self.players[player.UserId] = nil
+        check_player:Destroy()
     end
 
-    -- after work is done, fire emote
+    -- after work is done, fire remote
     InternalEvents.PlayerLeaving:Fire(player)
 end
 

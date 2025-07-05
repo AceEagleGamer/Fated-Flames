@@ -18,7 +18,7 @@ MoveService.debug = false
 MoveService.events = {}
 MoveService.connections = {}
 MoveService.playerCDs = {}
-MoveService.playerStates = {}
+MoveService.playerUpdateConnections = {}
 
 --- Private Functions ---
 
@@ -44,7 +44,7 @@ end]]
 
 local function EvaluateBlockingState(player, state: boolean)
 
-    -- sanity checks
+    --[[-- sanity checks
     local playerState = MoveService.playerStates[player.UserId]
     local playerCDs = MoveService.playerCDs[player.UserId]
 
@@ -65,9 +65,14 @@ local function EvaluateBlockingState(player, state: boolean)
     playerCDs.lastBlockTick = tick()
 
     -- accept the block
-    return true
+    return true]]
 end
 
+local function EvaluateM1State(player, state: boolean)
+
+end
+
+-- non m1 moves
 local function EvaluateRequest(player, moveFolder: string, moveName: string, variant, moveTick: string)
 
     -- sanity checks
@@ -97,7 +102,7 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string, var
 
     -- check if enough time has passed since the last move. Fun nesting
     if playerTable.lastMove and playerTable.lastMove.moveEndlag then
-        if (tick() - playerTable.lastMoveTick) < playerTable.lastMove.moveEndlag then return false end
+        if (time() - playerTable.lastMoveTick) < playerTable.lastMove.moveEndlag then return false end
     end
 
     -- check if we have a valid CD table. basically a more complicated check for nil :/.
@@ -117,72 +122,52 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string, var
     local moveCD = moveData:GetCooldown(variant) - 0.1 -- to make it more lenient i guess
     
     -- check CD timings
-    if tick() - playerTable[CDName] < moveCD then warn(`[MoveService] {player.Name} requesting a move under cooldown`); return false end
-    playerTable[`{moveFolder}{moveName}{variant}`] = tick()
+    if time() - playerTable[CDName] < moveCD then warn(`[MoveService] {player.Name} requesting a move under cooldown`); return false end
+    playerTable[`{moveFolder}{moveName}{variant}`] = time()
     moveData:Tick()
 
     -- update lastmove and lastmovetick
     playerTable.lastMove = moveData
-    playerTable.lastMoveTick = tick()
+    playerTable.lastMoveTick = time()
 
     -- replication here
     events.ReplicateMove:FireAllClients(player, moveFolder, moveName, variant, moveTick)
-
-    -- queue hit
-   --[[ local hitboxProperty = moveData.HitboxProperties[`hit{moveData.comboString}`]
-    task.delay(hitboxProperty.timing, function()
-        local hits = hitbox:Evaluate(player.Character.HumanoidRootPart.CFrame * hitboxProperty.cframe, hitboxProperty.size, true)
-        hits = hitbox:FilterSelf(player.Character, hits)
-
-        -- register hits
-        EvaluateHit(player, hits, `{moveFolder}/{moveName}`)
-    end)]]
     
     return true
+end
+
+local function Update(player, dt)
+    print("test")
 end
 
 --- Public Functions ---
 function MoveService:Init(context)
     self.context = context
-
-    --self.connections.hitRequest = events.Hit.OnServerEvent:Connect(EvaluateHit)
 end
 
 function MoveService:Start()
 
     local context = self.context
     local PlayerService = context.services.playerservice
+    local TickService = context.services.tickservice
 
     -- not sure if i can store this callback in a table. wtv
     events.RequestMove.OnServerInvoke = EvaluateRequest
     events.UpdateBlockingState.OnServerInvoke = EvaluateBlockingState
+    events.UpdateM1State.OnServerInvoke = EvaluateM1State
 
     self.connections.playerLoaded = PlayerService.events.playerJoining:Connect(function(player: Player)
         
         -- wait for the player to load on the client first
         player:GetAttributeChangedSignal("ClientLoaded"):Wait()
 
-        -- register player move states (mostly just for m1s and blocks tbh)
-        self.playerStates[player.UserId] = {
-            m1 = false,
-            blocking = false,
-        }
+        local playerClass = PlayerService.players[player.UserId]
+        if playerClass == nil then player:Kick("Something went wrong with initializing the player"); warn(`[MoveService] failed to initialize {player} - no player class obj`); return end
 
-        -- register records to player CDs
-        self.playerCDs[player.UserId] = {
-            lastMove = "nil",
-            lastBlockTick = 0,
-            lastMoveTick = 0
-        }
-    end)
-
-    self.connections.playerLeft = PlayerService.events.playerLeaving:Connect(function(player: Player)
-        
-        -- remove records from, player CDs
-        if self.playerCDs[player.UserId] then
-            table.clear(self.playerCDs[player.UserId]) -- assuming this actually clears the table? setting the table to nil doesnt do that
-            self.playerCDs[player.UserId] = nil
-        end
+        -- setup connection inside the player obj
+        playerClass.connections.updateConnection = TickService.Update:Connect(function(dt)
+            Update(player, dt)
+        end)
     end)
 end
 

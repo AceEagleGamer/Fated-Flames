@@ -21,6 +21,12 @@
       }
     },
 
+    "ServerStorage": {
+      "Classes": {
+        "$path": "Classes"
+      }
+    },
+
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "Client": {

@@ -109,7 +109,7 @@ MoveData.HitboxProperties = {
             },
             downslam = {
                 conditionFulfilled = function()
-                    local timeActivated = tick() - MoveData.lastlastSwing
+                    local timeActivated = time() - MoveData.lastlastSwing
                     return (timeActivated > 0.7 and timeActivated < 1) and localPlayer.Character.Humanoid.FloorMaterial == Enum.Material.Air
                 end,
                 timing = 0.25,
@@ -152,11 +152,11 @@ end
 
 function MoveData:Tick()
     -- reset combo string if we're over the timing window
-    if tick() - self.lastSwing >= self.properties.comboStringReset then
+    if time() - self.lastSwing >= self.properties.comboStringReset then
         self.comboString = 0
     end
     
-    self.lastSwing = tick()
+    self.lastSwing = time()
 
     if self.comboString == 4 then self.comboString = 0 end -- reset
     self.comboString += 1
@@ -164,7 +164,7 @@ end
 
 function MoveData:TempTick(curString)
     local temp = curString
-    if tick() - self.lastSwing >= self.properties.comboStringReset then
+    if time() - self.lastSwing >= self.properties.comboStringReset then
         temp = 0
     end
 
@@ -257,7 +257,7 @@ function MoveData:Work(_, inputState, _inputObj)
             -- stop previous anim (idk if this does anything)
             if self.animations[`hit{self.comboString - 1}`] then self.animations[`hit{self.comboString - 1}`]:Stop() end
 
-            MoveData.lastlastSwing = tick() -- die
+            MoveData.lastlastSwing = time() -- die
             
             -- play vfx stuff
             moveAnim:Play()
