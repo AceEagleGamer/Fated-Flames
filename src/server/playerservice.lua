@@ -11,7 +11,7 @@ local classes = ss.Classes
 
 -- classes
 local PlayerClass = require(classes.player) -- ignore error idk why it thinks it doesnt exist
-local ProfileStore = require(game:GetService("ReplicatedStorage").Packages.profilestore)
+local ProfileStore = require(packages.profilestore)
 
 --- Public Variables ---
 local PlayerService = {}
@@ -39,6 +39,9 @@ local function PlayerJoining(player: Player)
     -- create a new player
     local newPlayerObj = PlayerClass.new(player)
     PlayerService.players[player.UserId] = newPlayerObj
+
+    -- init 
+    newPlayerObj:Init(PlayerService.context)
 
     -- analytics
     print(`[PlayerService] Registering {player.Name}`)
@@ -83,6 +86,7 @@ end
 
 function PlayerService:Start()
     
+
 end
 
 return PlayerService

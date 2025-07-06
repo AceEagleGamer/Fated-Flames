@@ -2,12 +2,16 @@
 local Player = {}
 Player.__index = Player
 
-local analytics = true
+local analytics = true -- debug purposes
 
 --- Constructor ---
 function Player.new(playerObj)
     local newPlayer = {}
     setmetatable(newPlayer, Player)
+
+    -- references
+    newPlayer.context = nil
+    newPlayer.initialized = true
 
     -- physical objects
     newPlayer.player_object = playerObj
@@ -22,10 +26,13 @@ function Player.new(playerObj)
         m1 = false,
         blocking = false,
     }
+
     newPlayer.playerCDs = {
-        lastMove = "nil",
-        lastBlockTick = 0,
-        lastMoveTick = 0
+        lastInfo = {
+            lastMove = "nil",
+            lastBlockTick = 0,
+            lastMoveTick = 0
+        }
     }
 
     return newPlayer
@@ -67,5 +74,9 @@ function Player:Destroy()
 end
 
 --- Class Functions ---
+function Player:Init(context)
+    self.context = context
+    self.initialized = true
+end
 
 return Player

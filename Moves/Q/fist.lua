@@ -34,7 +34,7 @@ MoveData.properties = {
             conditionFulfilled = function()
                 if not localPlayer.Character or not localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character.Humanoid.Health <= 0 then return end
                 local PlayerScripts = localPlayer:WaitForChild("PlayerScripts")
-                local PlayerModule = require(PlayerScripts:WaitForChild("PlayerModule"))
+                local PlayerModule = require(PlayerScripts:WaitForChild("PlayerModule")) -- ignore error
                 local ControlModule = PlayerModule:GetControls()
 
                 local _hum = localPlayer.Character.Humanoid
@@ -82,7 +82,7 @@ local function EvaluateDir()
     if run:IsServer() then return end
     if not localPlayer.Character or not localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character.Humanoid.Health <= 0 then return end
     local PlayerScripts = localPlayer:WaitForChild("PlayerScripts")
-    local PlayerModule = require(PlayerScripts:WaitForChild("PlayerModule"))
+    local PlayerModule = require(PlayerScripts:WaitForChild("PlayerModule")) -- ignore error
     local ControlModule = PlayerModule:GetControls()
 
     local _hum = localPlayer.Character.Humanoid

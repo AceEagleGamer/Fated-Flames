@@ -7,28 +7,26 @@ local moves = rep.Moves
 --- Public Variables ---
 local DamageService = {}
 
-DamageService.debug = false
-DamageService.events = {}
 DamageService.connections = {}
 DamageService.context = nil
-DamageService.charFolder = nil
 
 --- Private Functions ---
-local function QueueStun(char, stunDuration)
+local function QueueStun(player, stunDuration)
+    local PlayerService = DamageService.context.services.playerservice
 
-    local MoveService = DamageService.context.services.characterservice
-
-    -- disconnect previous thread
-    local threadHolder = MoveService.charThreads[(playerService:GetPlayerFromCharacter(char) and playerService:GetPlayerFromCharacter(char).UserId) or char]
-    if not threadHolder then return end
-
-    if threadHolder.stunThread then task.cancel(threadHolder.stunThread) end
+    -- get player info
+    local player_info = PlayerService.players[player.UserId]
+    local char = player_info.character_model
+    local threads = player_info.threads
 
     -- sanity check
     if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end 
 
+    -- cancel previous stun thread
+    if threads.stunThread then task.cancel(threads.stunThread) end
+
     char:SetAttribute("Stunned", true)
-    threadHolder.stunThread = task.delay(stunDuration, function()
+    threads.stunThread = task.delay(stunDuration, function()
         char:SetAttribute("Stunned", false)
     end)
 end
@@ -86,6 +84,7 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
             services.ragdollservice:Work(hit, kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 1), hitboxProperties.ragdollProperties.duration, ragdollProperties.setCFrame)
         end
     end
+
     -- loop through hit table
     for _, hit in hitTable do
         -- dont register if the hit is hitting a ragdolled character and we cant bypass ragdolls
@@ -111,7 +110,6 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
         end
     end
 
-    events.ReplicateHit:FireAllClients(player.Name, playersHit, moveData.HitboxProperties[`hit{moveData.comboString}`])
 end
 
 --- Public Functions ---
@@ -119,7 +117,7 @@ function DamageService:Init(context)
 
     self.context = context
 
-    self.connections.hitRequest = events.Hit.OnServerEvent:Connect(EvaluateHit)
+    self.connections.hit = events.Hit.Event:Connect(EvaluateHit)
 end
 
 function DamageService:Start()

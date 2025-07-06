@@ -38,10 +38,7 @@ local function onCharacterAdded(player: Player, char)
     if not player_info then
         player:Kick("[CharacterService] Something went wrong initializing your player. Please rejoin")
     end
-
-    -- set some important info into the player obj
-    player_info.character_model = char
-
+    
     -- re-parent the character
     char.Parent = CharacterService.charFolder
 
@@ -60,10 +57,9 @@ local function onCharacterAdded(player: Player, char)
         player:SetAttribute("CharacterLoaded", false)
         char:SetAttribute("Dead", true)
 
-        -- reset connections
+        -- reset connections and info
         player_info.connections.playerDied:Disconnect()
-
-        player_info.player_object = nil
+        player_info.character_model = nil
 
         -- ragdoll the player
         char:SetAttribute("IsRagdoll", true)

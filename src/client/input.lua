@@ -39,7 +39,7 @@ Input.blocking = false
 Input.blockAnim = nil
 
 --- Private Functions ---
-local function EvaluateMoveInput(actionName, inputState, _inputObj)
+--[[local function EvaluateMoveInput(actionName, inputState, _inputObj)
 
     -- if we're blocking or moving already then dont go
     if Input.moving or Input.blocking then return end
@@ -111,26 +111,7 @@ local function EvaluateMoveInput(actionName, inputState, _inputObj)
     -- run the move module and fire the event
     MovingRemote:Fire(CDName)
     moveMod:Work(actionName, inputState, _inputObj, extraData)
-end
-
-local function EvaluateM1(_, inputState, _inputObj)
-    Input.heldKeys.m1 = inputState == Enum.UserInputState.Begin
-    return Enum.ContextActionResult.Pass
-end
-
-local function EvaluateF(_, inputState, _inputObj)
-    Input.heldKeys.f = inputState == Enum.UserInputState.Begin
-    return Enum.ContextActionResult.Pass
-end
-
-local function SetJumpPower(jp)
-
-    local char = player.Character
-    if not char or not char:FindFirstChild("Humanoid") then return end
-    if Input.context.services.core.playerState.endlag then return end
-
-    char.Humanoid.JumpPower = jp
-end
+end]]
 
 --- Public Functions ---
 function Input:Init(context)
@@ -139,9 +120,13 @@ function Input:Init(context)
     -- TODO: load actual bindings here
     Input.bindings.MouseButton1 = "fist"
     Input.bindings.Q = "fist"
+    Input.bindings.F = "fist"
+
+    -- update server bindings
+    
     
     -- test i guess
-    for key, move in self.bindings do
+    --[[for key, move in self.bindings do
     -- get the move module
         local moveBranch = moves:FindFirstChild(key)
         if not moveBranch then warn(`{key} move branch does not exist for {move}`); continue end
@@ -169,13 +154,12 @@ function Input:Init(context)
             self.M1Properties.moveMod = moveMod
             self.M1Properties.moveName = `{key}/{move}`
         end
-    end
+    end]]
 
     -- blocking
-    cas:BindAction(`blocking`, EvaluateF, false, Enum.KeyCode.F)
 
     -- reset move mods on death
-    self.connections.characterLoaded = player.CharacterAdded:Connect(function(char)
+    --[[self.connections.characterLoaded = player.CharacterAdded:Connect(function(char)
 
         -- load block anim
         self.blockAnim = char:WaitForChild("Humanoid").Animator:LoadAnimation(rep.BlockAnims.fistblock)
@@ -196,7 +180,7 @@ function Input:Init(context)
             end
         end)
     
-    end)
+    end)]]
 end
 
 function Input:Start()

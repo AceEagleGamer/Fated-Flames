@@ -137,7 +137,7 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string, var
 end
 
 local function Update(player, dt)
-    print("test")
+    --print("test")
 end
 
 --- Public Functions ---
