@@ -11,25 +11,11 @@ local Core = {}
 
 Core.context = nil
 Core.connections = {}
-Core.animBlacklist = {}
-Core.playerCons = {}
-Core.playerThreads = {}
-
-Core.animCons = {}
-Core.characterAnims = {}
+Core.threads = {}
 Core.playerState = {
     followingCamDir = false,
     statuses = {},
-
-    originalWalkspeed = 16, -- just set it to this for now
-    originalJumpPower = 50,
-
-    remote = nil,
-    Changed = nil
 }
-Core.queuedHits = {}
-
-Core.debug = false
 
 --- Private Functions ---
 
@@ -38,27 +24,20 @@ Core.debug = false
 function Core:Init(context)
     self.context = context
 
-    -- build player state table
-    self.playerState.remote = Instance.new("BindableEvent")
-    self.playerState.Changed = self.playerState.remote.Event
-
-    -- LOcAL PLAYHER
-    self.playerCons[localPlayer.UserId] = {}
-
     -- run stuff ourselves
-    localPlayer.CharacterAdded:Connect(function(char)
+    self.connections.characterAdded = localPlayer.CharacterAdded:Connect(function(char)
 
         -- do cam stuff here
         local cam = workspace.CurrentCamera
         cam.CameraSubject = char:WaitForChild("Head")
 
         -- break previous thread then make a new one
-        if self.playerThreads.shiftlockFix then
-            self.playerThreads.shiftlockFix:Disconnect()
+        if self.threads.shiftlockFix then
+            self.threads.shiftlockFix:Disconnect()
         end
 
         local hum = char:WaitForChild("Humanoid")
-        self.playerThreads.shiftlockFix = run.RenderStepped:Connect(function()
+        self.threads.shiftlockFix = run.RenderStepped:Connect(function()
             if not char or not hum then
                 return
             end

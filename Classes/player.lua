@@ -28,11 +28,9 @@ function Player.new(playerObj)
     }
 
     newPlayer.playerCDs = {
-        lastInfo = {
-            lastMove = "nil",
-            lastBlockTick = 0,
-            lastMoveTick = 0
-        }
+        lastMove = "nil",
+        lastBlockTick = 0,
+        lastMoveTick = 0
     }
 
     return newPlayer
@@ -63,7 +61,7 @@ function Player:Destroy()
 
     table.clear(self.threads)
     table.clear(self.connections)
-    table.clear(self.playerStates)
+    table.clear(self.inputStates)
     table.clear(self.playerCDs)
 
     if analytics then
@@ -77,6 +75,8 @@ end
 function Player:Init(context)
     self.context = context
     self.initialized = true
+    
+    -- do other stuff i guess idk
 end
 
 return Player

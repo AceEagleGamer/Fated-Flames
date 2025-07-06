@@ -97,7 +97,6 @@ function MoveData.new(context)
 
     newMoveData.stateTable = {
         lastMoveTick = 0,
-
     }
 
     -- references and other important stuff
