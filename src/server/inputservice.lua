@@ -97,13 +97,21 @@ function InputService:Start()
     local PlayerService = services.playerservice
     local TickService = services.tickservice
 
-    -- hook every player up to tick service and handle whatever theyre doing
     self.connections.playerJoined = PlayerService.events.playerJoining:Connect(function(player)
         
+        -- hook input loop to tickservice to handle m1 and blocking, probably some other stuff but later i guess
         local player_info = PlayerService.players[player.UserId]
+        local m1 = player_info.moveModules.MouseButton1
+
         player_info.connections.inputTicking = TickService.Update:Connect(function(dt)
             
-            
+            if player_info.inputStates.m1 then
+                print(m1)
+            end
+
+            if player_info.inputStates.blocking then
+
+            end
         end)
     end)
 end

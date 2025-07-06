@@ -1,4 +1,8 @@
---- Initializer
+--- Private Variables ---
+local rep = game:GetService("ReplicatedStorage")
+local moves = rep.Moves
+
+--- Initializer ---
 local Player = {}
 Player.__index = Player
 
@@ -21,6 +25,7 @@ function Player.new(playerObj)
     newPlayer.connections = {} -- assume these are all disconnectable with :Disconnect()
     newPlayer.threads = {} -- assume these are all cancelable with task.cancel()
     newPlayer.moveModules = {} -- assume these are all classes that we can call :Destroy() on
+    newPlayer.bindings = {} -- bind skills to keys
 
     newPlayer.inputStates = {
         m1 = false,
@@ -75,6 +80,24 @@ end
 function Player:Init(context)
     self.context = context
     self.initialized = true
+
+    -- TODO: load bindings from data. right now its all placeholder stuff
+    self.bindings.MouseButton1 = "fist"
+    --self.bindings.Q = "fist"
+    --self.bindings.F = "fist"
+
+    -- load move modules based on bindings
+    for key, modName in self.bindings do
+        local moveFolder = moves:FindFirstChild(key)
+        if moveFolder == nil then warn(`{key} is not a valid move folder`); continue end
+
+        local moveMod = moveFolder:FindFirstChild(modName)
+        if moveMod == nil then warn(`{modName} is not a valid move module of {key}`); continue end
+
+        -- require and store object in player move table
+        local newMoveMod = require(moveMod).new(self)
+        self.moveModules[key] = newMoveMod
+    end
     
     -- do other stuff i guess idk
 end

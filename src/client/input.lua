@@ -32,11 +32,6 @@ end
 function Input:Init(context)
     self.context = context
 
-    -- TODO: load actual bindings here
-    Input.bindings.MouseButton1 = "fist"
-    Input.bindings.Q = "fist"
-    Input.bindings.F = "fist"
-
     -- hook some stuff for the input loop for now
     cas:BindAction(`m1`, EvaluateToggleableInput, false, Enum.UserInputType.MouseButton1)
     cas:BindAction('blocking', EvaluateToggleableInput, false, Enum.KeyCode.F)

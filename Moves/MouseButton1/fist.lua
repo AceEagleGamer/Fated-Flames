@@ -3,9 +3,10 @@ local MoveData = {}
 MoveData.__index = MoveData
 
 --- Private Variables ---
-
+local shared = game:GetService("ReplicatedStorage").Shared
+local maid = require(shared.maid)
 --- Constructor ---
-function MoveData.new(context)
+function MoveData.new(playerData)
     local newMoveData = {}
     setmetatable(newMoveData, MoveData)
 
@@ -100,12 +101,21 @@ function MoveData.new(context)
     }
 
     -- references and other important stuff
-    newMoveData.context = context
+    newMoveData.playerData = playerData
 
     return newMoveData
 end
 
 --- Deconstructor ---
+function MoveData:Destroy()
+    table.clear(self.properties)
+    table.clear(self.stateTable)
+    self.playerData = nil
+
+    maid:DeepClear(self.hitProperties)
+
+    table.clear(self)
+end
 
 --- Class Functions ---
 function MoveData:Work()
