@@ -89,6 +89,7 @@ function MoveData.new(context)
 
     -- move properties
     newMoveData.properties = {
+
         currentComboString = 1,
         maxComboString = 4,
         comboResetTimer = 4,
@@ -106,5 +107,10 @@ function MoveData.new(context)
 end
 
 --- Deconstructor ---
+
+--- Class Functions ---
+function MoveData:Work()
+
+end
 
 return MoveData

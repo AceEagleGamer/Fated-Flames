@@ -8,8 +8,6 @@ local moves = rep.Moves
 
 --- Private Variables ---
 local MovingRemote = Instance.new("BindableEvent")
-local UpdateM1State = rep.Events.UpdateM1State
-local UpdateBlockingState = rep.Events.UpdateBlockingState
 
 --- Public Variables ---
 local Input = {}
@@ -113,6 +111,11 @@ Input.blockAnim = nil
     moveMod:Work(actionName, inputState, _inputObj, extraData)
 end]]
 
+--- Private Functions
+function EvaluateToggleableInput(actionName, inputState)
+    print("lol")
+end
+
 --- Public Functions ---
 function Input:Init(context)
     self.context = context
@@ -122,8 +125,9 @@ function Input:Init(context)
     Input.bindings.Q = "fist"
     Input.bindings.F = "fist"
 
-    -- update server bindings
-    
+    -- hook some stuff for the input loop for now
+    cas:BindAction(`m1`, EvaluateToggleableInput, false, Enum.UserInputType.MouseButton1)
+    cas:BindAction('blocking', EvaluateToggleableInput, false, Enum.KeyCode.F)
     
     -- test i guess
     --[[for key, move in self.bindings do

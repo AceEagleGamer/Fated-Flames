@@ -153,8 +153,8 @@ function MoveService:Start()
 
     -- not sure if i can store this callback in a table. wtv
     events.RequestMove.OnServerInvoke = EvaluateRequest
-    events.UpdateBlockingState.OnServerInvoke = EvaluateBlockingState
-    events.UpdateM1State.OnServerInvoke = EvaluateM1State
+   -- events.UpdateBlockingState.OnServerInvoke = EvaluateBlockingState
+   -- events.UpdateM1State.OnServerInvoke = EvaluateM1State
 
     self.connections.playerLoaded = PlayerService.events.playerJoining:Connect(function(player: Player)
         

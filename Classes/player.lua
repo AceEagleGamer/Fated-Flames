@@ -22,7 +22,7 @@ function Player.new(playerObj)
     newPlayer.threads = {} -- assume these are all cancelable with task.cancel()
     newPlayer.moveModules = {} -- assume these are all classes that we can call :Destroy() on
 
-    newPlayer.playerStates = {
+    newPlayer.inputStates = {
         m1 = false,
         blocking = false,
     }

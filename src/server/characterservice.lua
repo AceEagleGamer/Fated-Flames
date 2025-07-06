@@ -38,13 +38,14 @@ local function onCharacterAdded(player: Player, char)
     if not player_info then
         player:Kick("[CharacterService] Something went wrong initializing your player. Please rejoin")
     end
-    
+
     -- re-parent the character
     char.Parent = CharacterService.charFolder
 
     -- set up attributes
     char:SetAttribute("Blocking", false)
     char:SetAttribute("Stunned", false)
+    char:SetAttribute("Endlag", false)
     char:SetAttribute("Staggered", false)
     char:SetAttribute("Hyperarmor", false)
 
