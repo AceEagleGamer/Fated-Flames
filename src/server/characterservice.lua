@@ -9,12 +9,9 @@ local _packages = rep.Packages
 --- Public Variables ---
 local CharacterService = {}
 
-CharacterService.debug = false
-CharacterService.events = {}
 CharacterService.connections = {}
 CharacterService.context = nil
 CharacterService.charFolder = nil
-CharacterService.charThreads = {}
 
 --- Private Functions ---
 local function onCharacterAdded(player: Player, char)
@@ -39,8 +36,11 @@ local function onCharacterAdded(player: Player, char)
     local PlayerService = context.services.playerservice
     local player_info = PlayerService.players[player.UserId]
     if not player_info then
-        player:Kick("On Character Added: Something went wrong initializing your player. Please rejoin")
+        player:Kick("[CharacterService] Something went wrong initializing your player. Please rejoin")
     end
+
+    -- set some important info into the player obj
+    player_info.character_model = char
 
     -- re-parent the character
     char.Parent = CharacterService.charFolder
@@ -59,6 +59,7 @@ local function onCharacterAdded(player: Player, char)
     player_info.connections.playerDied = hum.Died:Connect(function()
         player:SetAttribute("CharacterLoaded", false)
         char:SetAttribute("Dead", true)
+
         -- reset connections
         player_info.connections.playerDied:Disconnect()
 
@@ -123,16 +124,8 @@ function CharacterService:Start()
     local context = self.context
     local PlayerService = context.services.playerservice
 
-    -- temp for npcs for now
-    for _, npc in workspace.NPCs:GetChildren() do
-        self.charThreads[npc] = {}
-    end
-
     self.connections.playerJoined = PlayerService.events.playerJoining:Connect(function(player: Player)
 
-        -- register player threads table
-        self.charThreads[player.UserId] = {}
-        
         -- wait for the player to load on the client first
         player:GetAttributeChangedSignal("ClientLoaded"):Wait()
 
@@ -140,19 +133,6 @@ function CharacterService:Start()
 
         -- fire some events for the player to know that we've loaded in
         player:SetAttribute("CharacterLoaded", true)
-    end)
-
-    self.connections.playerLeft = PlayerService.events.playerLeaving:Connect(function(player: Player)
-        
-        local charThreads = self.charThreads[player.UserId]
-        -- clear threads and remove records
-        for _, thread in charThreads do
-            task.cancel(thread) -- assume theyre all task threads
-        end
-
-        -- extra clear i guess idk
-        table.clear(charThreads)
-        self.charThreads[player.UserId] = nil
     end)
 end
 
