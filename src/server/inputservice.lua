@@ -106,10 +106,12 @@ function InputService:Start()
         player_info.connections.inputTicking = TickService.Update:Connect(function(dt)
             
             if player_info.inputStates.m1 then
-                print(m1)
+                
             end
 
             if player_info.inputStates.blocking then
+                
+            else
 
             end
         end)
