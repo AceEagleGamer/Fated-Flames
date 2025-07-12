@@ -9,7 +9,7 @@ Player.__index = Player
 local analytics = true -- debug purposes
 
 --- Constructor ---
-function Player.new(playerObj)
+function Player.new(playerObj, context)
     local newPlayer = {}
     setmetatable(newPlayer, Player)
 
@@ -17,6 +17,7 @@ function Player.new(playerObj)
     newPlayer.context = nil
     newPlayer.initialized = false
     newPlayer.animationsLoaded = false
+    newPlayer.context = context
 
     -- physical objects
     newPlayer.player_object = playerObj
@@ -26,6 +27,7 @@ function Player.new(playerObj)
     newPlayer.connections = {} -- assume these are all disconnectable with :Disconnect()
     newPlayer.threads = {} -- assume these are all cancelable with task.cancel()
     newPlayer.moveModules = {} -- assume these are all classes that we can call :Destroy() on
+    newPlayer.moveQueue = {} -- for interruptible moves
     newPlayer.animations = {}
     newPlayer.bindings = {} -- bind skills to keys
 
@@ -94,6 +96,10 @@ function Player:Init(context)
 
     -- load move modules based on bindings
     for key, modName in self.bindings do
+
+        -- catch for blocking
+        if key == "F" then continue end
+
         local moveFolder = moves:FindFirstChild(key)
         if moveFolder == nil then warn(`{key} is not a valid move folder`); continue end
 
@@ -101,7 +107,7 @@ function Player:Init(context)
         if moveMod == nil then warn(`{modName} is not a valid move module of {key}`); continue end
 
         -- require and store object in player move table
-        local newMoveMod = require(moveMod).new(self)
+        local newMoveMod = require(moveMod).new(self, self.context)
         self.moveModules[key] = newMoveMod
     end
 

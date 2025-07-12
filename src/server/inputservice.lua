@@ -61,7 +61,6 @@ local function EvaluateRequest(player, moveFolder: string, moveName: string)
     -- check CD timings
     if time() - playerTable[CDName] < moveCD then warn(`[MoveService] {player.Name} requesting a move under cooldown`); return false end
     playerTable[`{moveFolder}{moveName}{variant}`] = time()
-    moveData:Tick()
 
     -- update lastmove and lastmovetick
     playerTable.lastMove = moveData
@@ -111,17 +110,17 @@ function InputService:Start()
             
             -- m1 loop
             if player_info.inputStates.m1 and (not player_info.playerStates.busy) then
-                print("m1")
+                m1:Work()
             end
 
             -- blocking
-            if player_info.inputStates.blocking and (not player_info.playerStates.busy) and (not player_info.animations.block.IsPlaying) and (tick() - player_info.playerCDs.lastBlockTick >= 0.5) then
+            if player_info.inputStates.blocking and (not player_info.playerStates.busy) and (not player_info.animations.block.IsPlaying) and (time() - player_info.playerCDs.lastBlockTick >= 0.5) then
                 player_info.playerStates.busy = true
                 player_info.animations.block:Play()
                 player_info.character_model:SetAttribute("Blocking", true)
 
             elseif not player_info.inputStates.blocking and player_info.animations.block.IsPlaying then
-                player_info.playerCDs.lastBlockTick = tick() -- record timestamp of new block
+                player_info.playerCDs.lastBlockTick = time() -- record timestamp of new block
                 player_info.playerStates.busy = false
                 player_info.animations.block:Stop()
                 player_info.character_model:SetAttribute("Blocking", false)

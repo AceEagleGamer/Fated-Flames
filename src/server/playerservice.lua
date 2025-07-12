@@ -37,7 +37,7 @@ end
 local function PlayerJoining(player: Player)
 
     -- create a new player
-    local newPlayerObj = PlayerClass.new(player)
+    local newPlayerObj = PlayerClass.new(player, PlayerService.context)
     PlayerService.players[player.UserId] = newPlayerObj
 
     -- init 

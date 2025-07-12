@@ -31,8 +31,14 @@ local function QueueStun(player, stunDuration)
     end)
 end
 
+--- Public Functions ---
+function DamageService:Init(context)
 
-local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hitboxVariant, hitDataName)
+    self.context = context
+
+end
+
+function DamageService:EvaluateHit(player, moveData, hitList)
 
     local services = DamageService.context.services
 
@@ -41,83 +47,8 @@ local function EvaluateHit(player, hitProperties: {[any]: any?}, rawMoveName, hi
     if not player.Character:FindFirstChild("HumanoidRootPart") then return end
     local hrp = player.Character.HumanoidRootPart
 
-    -- prevent things from happening when stunned
-    if player.Character:GetAttribute("Stunned") == true or player.Character:GetAttribute("IsRagdoll") == true then return end
+    print('hitting')
 
-    -- data sanity check
-    if hitProperties.HitList == nil then return end
-    local hitTable = hitProperties.HitList
-
-    -- get move data
-    local moveIdentifier = string.split(rawMoveName, '/')
-    local moveFolder = moveIdentifier[1]
-    local moveName = moveIdentifier[2]
-
-    -- move sanity check
-    if not moves:FindFirstChild(moveFolder) then return end
-    if not moves[moveFolder]:FindFirstChild(moveName) then return end
-
-    -- get move data
-    local moveData = require(moves[moveFolder]:FindFirstChild(moveName))
-    local hitboxProperties = moveData.HitboxProperties[hitDataName]
-
-    -- check if theres a hitbox variant
-    if hitboxVariant then
-        hitboxProperties = hitboxProperties.variants[hitboxVariant]
-    end
-
-    -- TODO: security checks. just hit them here doesnt matter
-    local playersHit = {}
-    local function work(hit)
-        hit:FindFirstChild("Humanoid"):TakeDamage(moveData.properties.damage)
-
-        -- stun if theres a stun duration
-        if hitboxProperties.stunDuration then
-            QueueStun(hit, hitboxProperties.stunDuration)
-        end
-
-        -- ragdoll if applicable
-        if hitboxProperties.ragdolls then
-            -- calculate kb
-            local ragdollProperties = hitboxProperties.ragdollProperties
-            local kbDir = ragdollProperties.knockback or (hrp.Position - hit.HumanoidRootPart.Position).Unit
-            services.ragdollservice:Work(hit, kbDir * (hitboxProperties.ragdollProperties.knockbackStrength or 1), hitboxProperties.ragdollProperties.duration, ragdollProperties.setCFrame)
-        end
-    end
-
-    -- loop through hit table
-    for _, hit in hitTable do
-        -- dont register if the hit is hitting a ragdolled character and we cant bypass ragdolls
-        if hit:GetAttribute("IsRagdoll") == true and hitboxProperties.bypassRagdoll ~= true then continue end
-
-        if playerService:GetPlayerFromCharacter(hit) then
-            table.insert(playersHit, hit)
-        end
-
-        -- check if we're blocking
-        local blocking = hit:GetAttribute("Blocking")
-        if blocking then
-            local dot = player.Character.HumanoidRootPart.CFrame.LookVector:Dot(hit.HumanoidRootPart.CFrame.LookVector)
-            if dot > 0.1 or hitboxProperties.bypassBlocks then -- facing the back
-                work(hit)
-                hit:SetAttribute("Blocking", false)
-            else
-                -- damage posture
-                hit:SetAttribute("Posture", hit:GetAttribute("Posture") - moveData.properties.postureDamage or 5)
-            end
-        else
-            work(hit)
-        end
-    end
-
-end
-
---- Public Functions ---
-function DamageService:Init(context)
-
-    self.context = context
-
-    self.connections.hit = events.Hit.Event:Connect(EvaluateHit)
 end
 
 function DamageService:Start()

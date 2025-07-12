@@ -17,8 +17,6 @@ MoveService.debug = false
 
 MoveService.events = {}
 MoveService.connections = {}
-MoveService.playerCDs = {}
-MoveService.playerUpdateConnections = {}
 
 --- Private Functions ---
 

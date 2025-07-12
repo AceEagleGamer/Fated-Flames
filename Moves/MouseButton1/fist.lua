@@ -5,8 +5,10 @@ MoveData.__index = MoveData
 --- Private Variables ---
 local shared = game:GetService("ReplicatedStorage").Shared
 local maid = require(shared.maid)
+local hitbox = require(shared.hitbox)
+
 --- Constructor ---
-function MoveData.new(playerData)
+function MoveData.new(playerData, context)
     local newMoveData = {}
     setmetatable(newMoveData, MoveData)
 
@@ -18,9 +20,10 @@ function MoveData.new(playerData)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
+            hitboxTiming = 0.13,
 
-            cframe = CFrame.new(0,0,-2.5),
-            size = Vector3.new(3,3,3),
+            cframe = CFrame.new(0,0,-3),
+            size = Vector3.new(6,6,6),
         },
 
         hit2 = {
@@ -29,9 +32,10 @@ function MoveData.new(playerData)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
+            hitboxTiming = 0.13,
 
-            cframe = CFrame.new(0,0,-2.5),
-            size = Vector3.new(3,3,3),
+            cframe = CFrame.new(0,0,-3),
+            size = Vector3.new(6,6,6),
         },
 
         hit3 = {
@@ -40,9 +44,10 @@ function MoveData.new(playerData)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
+            hitboxTiming = 0.13,
 
-            cframe = CFrame.new(0,0,-2.5),
-            size = Vector3.new(3,3,3),
+            cframe = CFrame.new(0,0,-3),
+            size = Vector3.new(6,6,6),
         },
 
         hit4 = {
@@ -51,9 +56,10 @@ function MoveData.new(playerData)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 1.5,
+            hitboxTiming = 0.13,
 
-            cframe = CFrame.new(0,0,-2.5),
-            size = Vector3.new(3,3,3),
+            cframe = CFrame.new(0,0,-3),
+            size = Vector3.new(6,6,6),
             variants = {
                 downslam = {
                     damage = 5,
@@ -102,6 +108,7 @@ function MoveData.new(playerData)
 
     -- references and other important stuff
     newMoveData.playerData = playerData
+    newMoveData.context = context
 
     return newMoveData
 end
@@ -118,7 +125,82 @@ function MoveData:Destroy()
 end
 
 --- Class Functions ---
+function MoveData:Tick()
+    self.properties.currentComboString += 1
+
+    if self.properties.currentComboString > 4 then -- reset back to one
+        self.properties.currentComboString = 1
+    end
+end
+
 function MoveData:Work()
+    local player_info = self.playerData
+    local services = self.context.services
+    local DamageService = services.damageservice
+
+    if not player_info.playerStates.busy then
+        player_info.playerStates.busy = true
+
+        -- check if we've exceeded the combo reset timer, then reset
+        if (time() - self.stateTable.lastMoveTick >= self.properties.comboResetTimer) then
+            self.properties.currentComboString = 1
+        end
+
+        -- update info for player and move table
+        self.stateTable.lastMoveTick = time()
+
+        -- get current hit properties, and animation
+        local hitProperty = self.hitProperties[`hit{self.properties.currentComboString}`]
+        local moveAnim = player_info.animations[`hit{self.properties.currentComboString}`]
+
+        repeat task.wait() until moveAnim.Length > 0
+
+        -- play animation n things
+        local moveThread = task.spawn(function()
+
+            -- stop previous animations
+            for i = 1,4 do
+                player_info.animations[`hit{i}`]:Stop()
+            end
+
+            -- let the move run
+            -- TODO: vfx link to the client
+            moveAnim:Play()
+
+            -- hitbox stuff
+            local hits = {}
+            local newHitbox = hitbox.CreateHitbox()
+            newHitbox.Size = hitProperty.size
+            newHitbox.CFrame = player_info.character_model.HumanoidRootPart
+            newHitbox.Offset = hitProperty.cframe
+            newHitbox.VelocityPrediction = true
+            newHitbox.VelocityPredictionTime = player_info.player_object:GetNetworkPing()
+
+            newHitbox.Touched:Connect(function(hit, humanoid)
+                print(hit, humanoid)
+            end)
+            
+            task.delay(hitProperty.hitboxTiming, function()
+
+                newHitbox:Start()
+                task.wait(0.1)
+                newHitbox:Stop()
+
+            end)
+            
+        end)
+
+        -- add to table for other scripts to interrupt
+        if hitProperty.interruptible then
+            table.insert(player_info.moveQueue, moveThread)
+        end
+
+        -- at the end, go to the next tick
+        task.delay(hitProperty.endlag, function()
+            player_info.playerStates.busy = false
+        end)
+        self:Tick()
+    end
 
 end
 
