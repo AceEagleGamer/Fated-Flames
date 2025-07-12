@@ -15,7 +15,8 @@ function Player.new(playerObj)
 
     -- references
     newPlayer.context = nil
-    newPlayer.initialized = true
+    newPlayer.initialized = false
+    newPlayer.animationsLoaded = false
 
     -- physical objects
     newPlayer.player_object = playerObj
@@ -25,11 +26,16 @@ function Player.new(playerObj)
     newPlayer.connections = {} -- assume these are all disconnectable with :Disconnect()
     newPlayer.threads = {} -- assume these are all cancelable with task.cancel()
     newPlayer.moveModules = {} -- assume these are all classes that we can call :Destroy() on
+    newPlayer.animations = {}
     newPlayer.bindings = {} -- bind skills to keys
 
     newPlayer.inputStates = {
         m1 = false,
         blocking = false,
+    }
+
+    newPlayer.playerStates = {
+        busy = false
     }
 
     newPlayer.playerCDs = {
@@ -83,8 +89,8 @@ function Player:Init(context)
 
     -- TODO: load bindings from data. right now its all placeholder stuff
     self.bindings.MouseButton1 = "fist"
+    self.bindings.F = "fist"
     --self.bindings.Q = "fist"
-    --self.bindings.F = "fist"
 
     -- load move modules based on bindings
     for key, modName in self.bindings do
@@ -98,8 +104,36 @@ function Player:Init(context)
         local newMoveMod = require(moveMod).new(self)
         self.moveModules[key] = newMoveMod
     end
-    
+
     -- do other stuff i guess idk
 end
 
+function Player:LoadAnimations()
+
+    if self.character_model == nil then warn(`[Player] attempted to load animations when character model was nil`); return end
+    local animator = self.character_model:WaitForChild("Humanoid").Animator
+
+    -- load block anim
+    local targetAnim = rep.BlockAnims:FindFirstChild(self.bindings.F)
+    if targetAnim then
+        self.animations.block = animator:LoadAnimation(targetAnim)
+    end
+
+    -- load m1 animations
+    local targetAnimFolder = rep.MoveAnims.MouseButton1:FindFirstChild(self.bindings.MouseButton1)
+    if targetAnimFolder then
+        for _, anim in targetAnimFolder:GetChildren() do
+            self.animations[anim.Name] = animator:LoadAnimation(anim)
+        end
+    end
+
+    self.animationsLoaded = true
+end
+
+function Player:Reset()
+    self.playerStates.busy = false
+    self.animationsLoaded = false
+    self.character_model = nil
+    self.connections.playerDied:Disconnect()
+end
 return Player

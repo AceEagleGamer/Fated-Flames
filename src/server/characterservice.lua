@@ -18,6 +18,7 @@ local function onCharacterAdded(player: Player, char)
 
     -- wait for the character appearance to load
     player.CharacterAppearanceLoaded:Wait()
+    player:SetAttribute("CharacterLoaded", true)
 
     -- set player parts to not interact with physics queries
     for _, part in char:GetDescendants() do
@@ -41,6 +42,8 @@ local function onCharacterAdded(player: Player, char)
 
     -- re-parent the character
     char.Parent = CharacterService.charFolder
+    player_info.character_model = player.Character
+    player_info:LoadAnimations()
 
     -- set up attributes
     char:SetAttribute("Blocking", false)
@@ -59,8 +62,7 @@ local function onCharacterAdded(player: Player, char)
         char:SetAttribute("Dead", true)
 
         -- reset connections and info
-        player_info.connections.playerDied:Disconnect()
-        player_info.character_model = nil
+        player_info:Reset()
 
         -- ragdoll the player
         char:SetAttribute("IsRagdoll", true)
@@ -74,7 +76,6 @@ local function onCharacterAdded(player: Player, char)
         task.wait(context.respawnTimer)
         char:Destroy()
 
-        player:SetAttribute("CharacterLoaded", true)
         player:LoadCharacter()
     end)
 end
@@ -98,7 +99,6 @@ local function InitialLoadCharacter(player: Player)
 
     -- load character
     player:LoadCharacter()
-    player_info.character_model = player.Character
 end
 
 --- Public Functions ---

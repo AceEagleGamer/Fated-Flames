@@ -103,16 +103,28 @@ function InputService:Start()
         local player_info = PlayerService.players[player.UserId]
         local m1 = player_info.moveModules.MouseButton1
 
-        player_info.connections.inputTicking = TickService.Update:Connect(function(dt)
+        player_info.connections.updateLoop = TickService.Update:Connect(function(dt)
+
+            -- sanity checks
+            if player_info.character_model == nil then return end
+            if not player_info.animationsLoaded then return end
             
-            if player_info.inputStates.m1 then
-                
+            -- m1 loop
+            if player_info.inputStates.m1 and (not player_info.playerStates.busy) then
+                print("m1")
             end
 
-            if player_info.inputStates.blocking then
-                
-            else
+            -- blocking
+            if player_info.inputStates.blocking and (not player_info.playerStates.busy) and (not player_info.animations.block.IsPlaying) and (tick() - player_info.playerCDs.lastBlockTick >= 0.5) then
+                player_info.playerStates.busy = true
+                player_info.animations.block:Play()
+                player_info.character_model:SetAttribute("Blocking", true)
 
+            elseif not player_info.inputStates.blocking and player_info.animations.block.IsPlaying then
+                player_info.playerCDs.lastBlockTick = tick() -- record timestamp of new block
+                player_info.playerStates.busy = false
+                player_info.animations.block:Stop()
+                player_info.character_model:SetAttribute("Blocking", false)
             end
         end)
     end)
