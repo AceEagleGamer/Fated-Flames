@@ -11,16 +11,25 @@ DamageService.connections = {}
 DamageService.context = nil
 
 --- Private Functions ---
-local function QueueStun(player, stunDuration)
+local function QueueStun(character, stunDuration)
     local PlayerService = DamageService.context.services.playerservice
+    local NPCService = DamageService.context.services.npcservice
 
-    -- get player info
-    local player_info = PlayerService.players[player.UserId]
-    local char = player_info.character_model
-    local threads = player_info.threads
+    -- get character info
+    local character_info = nil
+    if character:IsA("Player") then
+        character_info = PlayerService.players[character.UserId]
+    else
+        character_info = NPCService.npcs[character:GetAttribute("NPCID")]
+    end
+    
+    local char = character_info.character_model
+    local threads = character_info.threads
 
     -- sanity check
     if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end 
+
+    -- interrupt moves that should be interrupted on stun
 
     -- cancel previous stun thread
     if threads.stunThread then task.cancel(threads.stunThread) end
@@ -31,6 +40,11 @@ local function QueueStun(player, stunDuration)
     end)
 end
 
+local function CalculateDamage(hit, hitData)
+    hit:FindFirstChild("Humanoid"):TakeDamage(hitData.damage)
+    QueueStun()
+end
+
 --- Public Functions ---
 function DamageService:Init(context)
 
@@ -38,16 +52,30 @@ function DamageService:Init(context)
 
 end
 
-function DamageService:EvaluateHit(player, moveData, hitList)
+function DamageService:EvaluateHit(player, hitData, hitList)
+    print(hitData)
 
-    local services = DamageService.context.services
+    for _, hit in hitList do
+        if hit == player.Character then continue end -- catch so we dont hit ourselves
 
-    -- player sanity check
-    if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character:FindFirstChild("Humanoid").Health <= 0 then return end
-    if not player.Character:FindFirstChild("HumanoidRootPart") then return end
-    local hrp = player.Character.HumanoidRootPart
+        -- dont register if the hit is hitting a ragdolled character and we cant bypass ragdolls
+        if hit:GetAttribute("IsRagdoll") == true and hitData.bypassRagdoll ~= true then continue end
 
-    print('hitting')
+        -- check if we're blocking
+        local blocking = hit:GetAttribute("Blocking")
+        if blocking then
+            local dot = player.Character.HumanoidRootPart.CFrame.LookVector:Dot(hit.HumanoidRootPart.CFrame.LookVector)
+            if dot > 0.1 or hitData.bypassBlocks then -- facing the back
+                CalculateDamage(hit, hitData)
+                hit:SetAttribute("Blocking", false)
+            else
+                -- damage posture
+                hit:SetAttribute("Posture", hit:GetAttribute("Posture") - hitData.postureDamage or 5)
+            end
+        else
+            CalculateDamage(hit, hitData)
+        end
+    end
 
 end
 

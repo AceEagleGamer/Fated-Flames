@@ -7,6 +7,10 @@ local shared = game:GetService("ReplicatedStorage").Shared
 local maid = require(shared.maid)
 local hitbox = require(shared.hitbox)
 
+local overlapParams = OverlapParams.new()
+overlapParams.FilterType = Enum.RaycastFilterType.Include
+overlapParams.FilterDescendantsInstances = {workspace.PlayerCharacters, workspace.NPCs}
+
 --- Constructor ---
 function MoveData.new(playerData, context)
     local newMoveData = {}
@@ -20,7 +24,7 @@ function MoveData.new(playerData, context)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
-            hitboxTiming = 0.13,
+            hitboxTiming = 0.25,
 
             cframe = CFrame.new(0,0,-3),
             size = Vector3.new(6,6,6),
@@ -32,7 +36,7 @@ function MoveData.new(playerData, context)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
-            hitboxTiming = 0.13,
+            hitboxTiming = 0.25,
 
             cframe = CFrame.new(0,0,-3),
             size = Vector3.new(6,6,6),
@@ -44,7 +48,7 @@ function MoveData.new(playerData, context)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
-            hitboxTiming = 0.13,
+            hitboxTiming = 0.25,
 
             cframe = CFrame.new(0,0,-3),
             size = Vector3.new(6,6,6),
@@ -56,7 +60,7 @@ function MoveData.new(playerData, context)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 1.5,
-            hitboxTiming = 0.13,
+            hitboxTiming = 0.25,
 
             cframe = CFrame.new(0,0,-3),
             size = Vector3.new(6,6,6),
@@ -175,9 +179,10 @@ function MoveData:Work()
             newHitbox.Offset = hitProperty.cframe
             newHitbox.VelocityPrediction = true
             newHitbox.VelocityPredictionTime = player_info.player_object:GetNetworkPing()
+            newHitbox.OverlapParams = overlapParams
 
             newHitbox.Touched:Connect(function(hit, humanoid)
-                print(hit, humanoid)
+                table.insert(hits, humanoid.Parent)
             end)
             
             task.delay(hitProperty.hitboxTiming, function()
@@ -186,6 +191,8 @@ function MoveData:Work()
                 task.wait(0.1)
                 newHitbox:Stop()
 
+                print(hits)
+                DamageService:EvaluateHit(player_info.player_object, hitProperty, hits)
             end)
             
         end)
