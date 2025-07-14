@@ -3,6 +3,7 @@ local rep = game:GetService("ReplicatedStorage")
 local playerService = game:GetService("Players")
 local events = rep.Events
 local moves = rep.Moves
+local moveSFX = rep.MoveSFX
 
 --- Public Variables ---
 local DamageService = {}
@@ -42,7 +43,19 @@ end
 
 local function CalculateDamage(hit, hitData)
     hit:FindFirstChild("Humanoid"):TakeDamage(hitData.damage)
-    QueueStun()
+    if hitData.stunDuration then
+        --QueueStun(hit, hitData.stunDuration)
+    end
+end
+
+local function PlaySound(soundName, origin)
+    local sound = moveSFX:FindFirstChild(soundName, true)
+    if sound == nil then return end
+
+    sound = sound:Clone()
+    sound.Parent = origin
+    sound:Play()
+    game:GetService("Debris"):AddItem(sound, sound.TimeLength * 3)
 end
 
 --- Public Functions ---
@@ -53,7 +66,6 @@ function DamageService:Init(context)
 end
 
 function DamageService:EvaluateHit(player, hitData, hitList)
-    print(hitData)
 
     for _, hit in hitList do
         if hit == player.Character then continue end -- catch so we dont hit ourselves
@@ -68,12 +80,21 @@ function DamageService:EvaluateHit(player, hitData, hitList)
             if dot > 0.1 or hitData.bypassBlocks then -- facing the back
                 CalculateDamage(hit, hitData)
                 hit:SetAttribute("Blocking", false)
+
+                -- play sound
+                PlaySound("hitlanded", hit.HumanoidRootPart)
             else
                 -- damage posture
                 hit:SetAttribute("Posture", hit:GetAttribute("Posture") - hitData.postureDamage or 5)
+
+                -- play sound
+                PlaySound("hitblocked", hit.HumanoidRootPart)
             end
         else
             CalculateDamage(hit, hitData)
+
+            -- play sound
+            PlaySound("hitlanded", hit.HumanoidRootPart)
         end
     end
 

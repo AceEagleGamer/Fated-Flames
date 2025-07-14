@@ -6,6 +6,7 @@ MoveData.__index = MoveData
 local shared = game:GetService("ReplicatedStorage").Shared
 local maid = require(shared.maid)
 local hitbox = require(shared.hitbox)
+local moveSFX = game:GetService("ReplicatedStorage").MoveSFX
 
 local overlapParams = OverlapParams.new()
 overlapParams.FilterType = Enum.RaycastFilterType.Include
@@ -24,7 +25,7 @@ function MoveData.new(playerData, context)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
-            hitboxTiming = 0.25,
+            hitboxTiming = 0.2,
 
             cframe = CFrame.new(0,0,-3),
             size = Vector3.new(6,6,6),
@@ -36,7 +37,7 @@ function MoveData.new(playerData, context)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
-            hitboxTiming = 0.25,
+            hitboxTiming = 0.2,
 
             cframe = CFrame.new(0,0,-3),
             size = Vector3.new(6,6,6),
@@ -48,7 +49,7 @@ function MoveData.new(playerData, context)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 0.4,
-            hitboxTiming = 0.25,
+            hitboxTiming = 0.2,
 
             cframe = CFrame.new(0,0,-3),
             size = Vector3.new(6,6,6),
@@ -60,7 +61,7 @@ function MoveData.new(playerData, context)
             stunDuration = 1.5,
             interruptible = true,
             endlag = 1.5,
-            hitboxTiming = 0.25,
+            hitboxTiming = 0.2,
 
             cframe = CFrame.new(0,0,-3),
             size = Vector3.new(6,6,6),
@@ -141,6 +142,7 @@ function MoveData:Work()
     local player_info = self.playerData
     local services = self.context.services
     local DamageService = services.damageservice
+    local TickService = services.tickservice
 
     if not player_info.playerStates.busy then
         player_info.playerStates.busy = true
@@ -170,6 +172,10 @@ function MoveData:Work()
             -- let the move run
             -- TODO: vfx link to the client
             moveAnim:Play()
+            local sound = moveSFX.MouseButton1.fist:FindFirstChild(`hit{self.properties.currentComboString}`):Clone()
+            sound.Parent = player_info.character_model.HumanoidRootPart
+            sound:Play()
+            game:GetService("Debris"):AddItem(sound, 2)
 
             -- hitbox stuff
             local hits = {}
@@ -187,12 +193,14 @@ function MoveData:Work()
             
             task.delay(hitProperty.hitboxTiming, function()
 
+                -- help
+                TickService.Update:Wait()
                 newHitbox:Start()
-                task.wait(0.1)
+                TickService.Update:Wait()
                 newHitbox:Stop()
 
-                print(hits)
                 DamageService:EvaluateHit(player_info.player_object, hitProperty, hits)
+                
             end)
             
         end)
