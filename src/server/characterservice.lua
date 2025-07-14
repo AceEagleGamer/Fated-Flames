@@ -35,6 +35,7 @@ local function onCharacterAdded(player: Player, char)
     -- get the player data table
     local context = CharacterService.context
     local PlayerService = context.services.playerservice
+    local TickService = context.services.tickservice
     local player_info = PlayerService.players[player.UserId]
     if not player_info then
         player:Kick("[CharacterService] Something went wrong initializing your player. Please rejoin")
@@ -77,6 +78,27 @@ local function onCharacterAdded(player: Player, char)
         char:Destroy()
 
         player:LoadCharacter()
+    end)
+
+    player_info.connections.adjustWalkspeed = TickService.Update:Connect(function(dt)
+        if player_info.character_model == nil or player_info.character_model:FindFirstChild("Humanoid") == nil then return end -- catch for nil idk
+
+        -- last jump timestamp help
+        if player_info.character_model.Humanoid.Jump and player_info.character_model.Humanoid.FloorMaterial ~= Enum.Material.Air then
+            player_info.timestamps.lastJump = time()
+        end
+
+        -- looks like bad
+        if player_info.playerStates.endlag or player_info.character_model:GetAttribute("Stunned") then
+            player_info.character_model.Humanoid.JumpPower = 0
+            player_info.character_model.Humanoid.WalkSpeed = 0
+        elseif (player_info.inputStates.m1 and player_info.playerStates.canM1) then
+            player_info.character_model.Humanoid.JumpPower = 0
+            --player_info.character_model.Humanoid.WalkSpeed = 7
+        else
+            player_info.character_model.Humanoid.JumpPower = 50
+            player_info.character_model.Humanoid.WalkSpeed = 16
+        end
     end)
 end
 

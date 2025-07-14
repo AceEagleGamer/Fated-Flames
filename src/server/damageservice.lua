@@ -67,11 +67,22 @@ end
 
 function DamageService:EvaluateHit(player, hitData, hitList)
 
+    local RagdollService = self.context.services.ragdollservice
+
     for _, hit in hitList do
         if hit == player.Character then continue end -- catch so we dont hit ourselves
 
         -- dont register if the hit is hitting a ragdolled character and we cant bypass ragdolls
         if hit:GetAttribute("IsRagdoll") == true and hitData.bypassRagdoll ~= true then continue end
+
+        -- ragdoll if we have the option
+        if hitData.ragdolls and hitData.ragdollProperties then
+            local kbDir = -player.Character.HumanoidRootPart.CFrame.LookVector * hitData.ragdollProperties.knockbackStrength
+            if hitData.ragdollProperties.knockback then
+                kbDir = hitData.ragdollProperties.knockback * hitData.ragdollProperties.knockbackStrength
+            end
+             RagdollService:Work(hit, kbDir, hitData.ragdollProperties.duration, hitData.ragdollProperties.setCFrame)
+        end
 
         -- check if we're blocking
         local blocking = hit:GetAttribute("Blocking")

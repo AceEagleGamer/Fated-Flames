@@ -34,16 +34,20 @@ function Player.new(playerObj, context)
     newPlayer.inputStates = {
         m1 = false,
         blocking = false,
+        jumping = false,
     }
 
     newPlayer.playerStates = {
-        busy = false
+        busy = false,
+        endlag = false,
+        canM1 = true
     }
 
-    newPlayer.playerCDs = {
+    newPlayer.timestamps = {
         lastMove = "nil",
         lastBlockTick = 0,
-        lastMoveTick = 0
+        lastMoveTick = 0,
+        lastJump = 0
     }
 
     return newPlayer
@@ -75,7 +79,7 @@ function Player:Destroy()
     table.clear(self.threads)
     table.clear(self.connections)
     table.clear(self.inputStates)
-    table.clear(self.playerCDs)
+    table.clear(self.timestamps)
 
     if analytics then
         print(`[Player] finished destroying {self.player_object.Name} player object`)
@@ -137,9 +141,13 @@ function Player:LoadAnimations()
 end
 
 function Player:Reset()
-    self.playerStates.busy = false
     self.animationsLoaded = false
     self.character_model = nil
+
+    self.playerStates.endlag = false
+    self.playerStates.busy = false
+    self.playerStates.canM1 = true
+
     self.connections.playerDied:Disconnect()
 end
 return Player

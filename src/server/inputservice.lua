@@ -109,7 +109,7 @@ function InputService:Start()
             if not player_info.animationsLoaded then return end
             
             -- m1 loop
-            if player_info.inputStates.m1 and (not player_info.playerStates.busy) then
+            if player_info.inputStates.m1 and (not player_info.playerStates.busy) and (not player_info.playerStates.endlag) then
                 m1:Work()
             end
 

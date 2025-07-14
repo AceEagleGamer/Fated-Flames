@@ -26,6 +26,8 @@ function EvaluateToggleableInput(actionName, inputState)
     -- https://devforum.roblox.com/t/will-firing-server-many-times-a-second-exceed-the-bandwidth-limit/693011
     -- remotes will automatically drop requests if an exploiter sends too many requests at once. this will probably not affect the server too much like this
     events.UpdateInputToggle:FireServer(Input.heldKeys)
+
+    return Enum.ContextActionResult.Pass
 end
 
 --- Public Functions ---
@@ -35,6 +37,7 @@ function Input:Init(context)
     -- hook some stuff for the input loop for now
     cas:BindAction(`m1`, EvaluateToggleableInput, false, Enum.UserInputType.MouseButton1)
     cas:BindAction('blocking', EvaluateToggleableInput, false, Enum.KeyCode.F)
+    cas:BindAction('jumping', EvaluateToggleableInput, false, Enum.KeyCode.Space)
 
 end
 
