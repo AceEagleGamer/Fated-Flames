@@ -96,6 +96,8 @@ function InputService:Start()
     local PlayerService = services.playerservice
     local TickService = services.tickservice
 
+    events.RequestMove.OnServerInvoke = EvaluateRequest
+
     self.connections.playerJoined = PlayerService.events.playerJoining:Connect(function(player)
         
         -- hook input loop to tickservice to handle m1 and blocking, probably some other stuff but later i guess
@@ -109,7 +111,7 @@ function InputService:Start()
             if not player_info.animationsLoaded then return end
             
             -- m1 loop
-            if player_info.inputStates.m1 and (not player_info.playerStates.busy) and (not player_info.playerStates.endlag) then
+            if (player_info.inputStates.m1 and (not player_info.playerStates.busy) and (not player_info.playerStates.endlag)) then
                 m1:Work()
             end
 
@@ -126,6 +128,10 @@ function InputService:Start()
                 player_info.character_model:SetAttribute("Blocking", false)
             end
         end)
+    end)
+
+    self.connections.setBindings = events.SetBindings.OnServerEvent:Connect(function(player, bindingsTable)
+        
     end)
 end
 

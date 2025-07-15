@@ -132,7 +132,7 @@ function MoveData.new(playerData, context)
 
         currentComboString = 1,
         maxComboString = 4,
-        comboResetTimer = 2,
+        comboResetTimer = 1,
     }
 
     newMoveData.stateTable = {
@@ -174,6 +174,7 @@ function MoveData:Work()
 
     if not player_info.playerStates.busy and player_info.playerStates.canM1 and player_info.character_model and player_info.character_model:FindFirstChild("HumanoidRootPart") then
         player_info.playerStates.busy = true
+        player_info.character_model:SetAttribute("Busy", true) -- replicate to other clients
 
         -- check if we've exceeded the combo reset timer, then reset
         if (time() - self.stateTable.lastMoveTick >= self.properties.comboResetTimer) then
@@ -260,6 +261,7 @@ function MoveData:Work()
                     if fulfilled then
                         moveEndlag = hitProperty.endlagFulfilled - hitProperty.hitboxTiming -- account for calculation delay
                         player_info.playerStates.endlag = true
+                        player_info.character_model:SetAttribute("Endlag", true)
                     else
                         moveEndlag = hitProperty.endlagOtherwise - hitProperty.hitboxTiming -- account for calculation delay
                     end
@@ -285,6 +287,8 @@ function MoveData:Work()
 
                 player_info.threads.canM1Again = task.delay(timer, function()
                     player_info.playerStates.canM1 = true
+
+                    player_info.character_model:SetAttribute("Busy", false) -- stuff idk
                 end)
             end)
         end
@@ -299,6 +303,8 @@ function MoveData:Work()
                 player_info.animations.uppercut:AdjustSpeed(12)
             end
             
+            player_info.character_model:SetAttribute("Endlag", false) -- replicate to other clients
+            player_info.character_model:SetAttribute("Busy", false) -- stuff idk
             player_info.playerStates.endlag = false
         end)
         self:Tick()

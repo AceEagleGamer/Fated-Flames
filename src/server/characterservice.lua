@@ -56,6 +56,14 @@ local function onCharacterAdded(player: Player, char)
     char:SetAttribute("Posture", 50)
     char:SetAttribute("RagdollCancelCooldownDuration", 15)
 
+    -- create attachments n stuff for dashes and other stuff
+    local velHolder = Instance.new("Attachment", char.HumanoidRootPart)
+    local linearVel = Instance.new("LinearVelocity", velHolder)
+    linearVel.Enabled = false
+    linearVel.Attachment0 = velHolder
+    linearVel.ForceLimitMode = Enum.ForceLimitMode.PerAxis
+    linearVel.MaxAxesForce = Vector3.new(50000, 0, 50000)
+
     -- set up events
     local hum = char:WaitForChild("Humanoid")
     player_info.connections.playerDied = hum.Died:Connect(function()

@@ -2,6 +2,7 @@
 local cas = game:GetService("ContextActionService")
 local rep = game:GetService("ReplicatedStorage")
 local events = rep.Events
+local moves = rep.Moves
 
 --- Public Variables ---
 local Input = {}
@@ -9,8 +10,7 @@ Input.context = nil
 Input.LoadAfterCharacterLoads = true
 
 Input.bindings = {}
-Input.connections = {}
-Input.threads = {}
+Input.moveModules = {}
 Input.updateFrequency = 0.1 -- in seconds
 
 Input.heldKeys = {
@@ -30,22 +30,38 @@ function EvaluateToggleableInput(actionName, inputState)
     return Enum.ContextActionResult.Pass
 end
 
+function EvaluateInput(action, inputState)
+    
+end
+
 --- Public Functions ---
 function Input:Init(context)
-    self.context = context
+     self.context = context
 
-    -- hook some stuff for the input loop for now
-    cas:BindAction(`m1`, EvaluateToggleableInput, false, Enum.UserInputType.MouseButton1)
-    cas:BindAction('blocking', EvaluateToggleableInput, false, Enum.KeyCode.F)
-    cas:BindAction('jumping', EvaluateToggleableInput, false, Enum.KeyCode.Space)
+     -- hook some stuff for the input loop for now
+     cas:BindAction(`m1`, EvaluateToggleableInput, false, Enum.UserInputType.MouseButton1)
+     cas:BindAction('blocking', EvaluateToggleableInput, false, Enum.KeyCode.F)
+     cas:BindAction('jumping', EvaluateToggleableInput, false, Enum.KeyCode.Space)
 
-    -- set bindings temporarily for now
-    self.bindings.Q = 'fist'
+     -- set bindings temporarily for now
+     self.bindings.Q = 'fist'
 
-    events.SetBindings:FireServer(self.bindings)
+     -- load move modules on the client
+     for key, moveName in self.bindings do
+        local targetFolder = moves:FindFirstChild(key)
+        if targetFolder == nil then continue end
 
-    -- load move modules on the client
+        local targetModule = targetFolder:FindFirstChild(moveName)
+        if targetModule == nil then continue end
 
+        local newMoveData = require(targetModule).new(nil, context)
+        self.moveModules[moveName] = newMoveData
+
+        cas:BindAction(`{key}/{moveName}`, EvaluateInput, false, Enum.KeyCode[key])
+     end
+
+     -- let the server know we've set our bindings
+     events.SetBindings:FireServer(self.bindings)
 
 end
 
