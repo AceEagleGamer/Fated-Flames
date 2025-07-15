@@ -56,16 +56,7 @@ end
 
 function Core:Start()
 
-    -- hit replication
-    --[[events.ReplicateHit.OnClientEvent:Connect(function(player, hitTable, hitProperties)
-        if player == localPlayer.Name then return end
-        self:PlayHit(workspace.PlayerCharacters:FindFirstChild(player), hitTable, hitProperties)
-
-        -- do some stun stuff here
-    end)]]
-
-    -- client prediction
-    --self.playerCons[localPlayer.UserId].serverPrediction = run.Heartbeat:Connect(predictServerCFrame) -- should this be here?
+    
 end
 
 return Core

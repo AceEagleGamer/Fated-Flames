@@ -114,13 +114,13 @@ function InputService:Start()
             end
 
             -- blocking
-            if player_info.inputStates.blocking and (not player_info.playerStates.busy) and (not player_info.animations.block.IsPlaying) and (time() - player_info.playerCDs.lastBlockTick >= 0.5) then
+            if player_info.inputStates.blocking and (not player_info.playerStates.busy) and (not player_info.animations.block.IsPlaying) and (time() - player_info.timestamps.lastBlockTick >= 0.5) then
                 player_info.playerStates.busy = true
                 player_info.animations.block:Play()
                 player_info.character_model:SetAttribute("Blocking", true)
 
             elseif not player_info.inputStates.blocking and player_info.animations.block.IsPlaying then
-                player_info.playerCDs.lastBlockTick = time() -- record timestamp of new block
+                player_info.timestamps.lastBlockTick = time() -- record timestamp of new block
                 player_info.playerStates.busy = false
                 player_info.animations.block:Stop()
                 player_info.character_model:SetAttribute("Blocking", false)

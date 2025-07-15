@@ -180,19 +180,19 @@ function MoveData:Work()
             self.properties.currentComboString = 1
         end
 
-        -- update info for player and move table
-        self.stateTable.lastMoveTick = time()
-
         -- check if we're on hit4 then determine if we're fulfilling the condition of a variant
         local variant = nil
         if self.properties.currentComboString == 4 then
             local isJumping = player_info.inputStates.jumping
             if isJumping then -- going up
                 variant = "uppercut"
-            elseif (time() - player_info.timestamps.lastJump < 1) then -- going down
+            elseif (time() - player_info.timestamps.lastJump < 0.5) and (time() - self.stateTable.lastMoveTick < 1) then -- going down
                 variant = "downslam"
             end
         end
+
+        -- update info for player and move table
+        self.stateTable.lastMoveTick = time()
 
         -- get current hit properties, and animation
         local hitProperty = self.hitProperties[`hit{self.properties.currentComboString}`]
@@ -299,9 +299,6 @@ function MoveData:Work()
                 player_info.animations.uppercut:AdjustSpeed(12)
             end
             
-
-
-
             player_info.playerStates.endlag = false
         end)
         self:Tick()

@@ -30,7 +30,7 @@ local function QueueStun(character, stunDuration)
     -- sanity check
     if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then return end 
 
-    -- interrupt moves that should be interrupted on stun
+    -- TODO: interrupt moves that should be interrupted on stun
 
     -- cancel previous stun thread
     if threads.stunThread then task.cancel(threads.stunThread) end

@@ -13,10 +13,10 @@ Input.connections = {}
 Input.threads = {}
 Input.updateFrequency = 0.1 -- in seconds
 
-Input.inputToggleQueue = {}
 Input.heldKeys = {
     m1 = false,
     blocking = false,
+    jumping = false
 }
 
 --- Private Functions
@@ -38,6 +38,14 @@ function Input:Init(context)
     cas:BindAction(`m1`, EvaluateToggleableInput, false, Enum.UserInputType.MouseButton1)
     cas:BindAction('blocking', EvaluateToggleableInput, false, Enum.KeyCode.F)
     cas:BindAction('jumping', EvaluateToggleableInput, false, Enum.KeyCode.Space)
+
+    -- set bindings temporarily for now
+    self.bindings.Q = 'fist'
+
+    events.SetBindings:FireServer(self.bindings)
+
+    -- load move modules on the client
+
 
 end
 

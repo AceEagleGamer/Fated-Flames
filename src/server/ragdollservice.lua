@@ -202,6 +202,7 @@ function Ragdoll:Start()
 			if self.cons[player.UserId].ragdollEvent then
 				self.cons[player.UserId].ragdollEvent:Disconnect()
 			end
+			
 			-- Connect the event
 			self.cons[player.UserId].ragdollEvent = char:GetAttributeChangedSignal("IsRagdoll"):Connect(function()
 				local isRagdoll = char:GetAttribute("IsRagdoll")
