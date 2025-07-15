@@ -56,6 +56,11 @@ local function onCharacterAdded(player: Player, char)
     char:SetAttribute("Posture", 50)
     char:SetAttribute("RagdollCancelCooldownDuration", 15)
 
+    -- busy and endlag for replication purposes
+    char:SetAttribute("Endlag", false)
+    char:SetAttribute("Busy", false)
+    char:SetAttribute("CanM1", true)
+
     -- create attachments n stuff for dashes and other stuff
     local velHolder = Instance.new("Attachment", char.HumanoidRootPart)
     local linearVel = Instance.new("LinearVelocity", velHolder)

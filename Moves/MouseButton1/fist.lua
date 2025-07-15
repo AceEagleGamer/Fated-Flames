@@ -283,12 +283,12 @@ function MoveData:Work()
 
             task.delay(0.2, function()
                 player_info.playerStates.canM1 = false
-                local timer = if player_info.playerStates.endlag then 2 else 1.5
+                player_info.character_model:SetAttribute("CanM1", false) -- replicate to other clients
+                local timer = if player_info.playerStates.endlag then 2 else 1
 
                 player_info.threads.canM1Again = task.delay(timer, function()
+                    player_info.character_model:SetAttribute("CanM1", true) -- replicate to other clients
                     player_info.playerStates.canM1 = true
-
-                    player_info.character_model:SetAttribute("Busy", false) -- stuff idk
                 end)
             end)
         end
@@ -302,9 +302,9 @@ function MoveData:Work()
                 player_info.animations.downslam:AdjustSpeed(12)
                 player_info.animations.uppercut:AdjustSpeed(12)
             end
-            
+
+            player_info.character_model:SetAttribute("Busy", false) -- replicate to other clients
             player_info.character_model:SetAttribute("Endlag", false) -- replicate to other clients
-            player_info.character_model:SetAttribute("Busy", false) -- stuff idk
             player_info.playerStates.endlag = false
         end)
         self:Tick()

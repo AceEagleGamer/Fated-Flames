@@ -3,6 +3,7 @@ local cas = game:GetService("ContextActionService")
 local rep = game:GetService("ReplicatedStorage")
 local events = rep.Events
 local moves = rep.Moves
+local client = game.Players.LocalPlayer
 
 --- Public Variables ---
 local Input = {}
@@ -19,24 +20,34 @@ Input.heldKeys = {
     jumping = false
 }
 
---- Private Functions
-function EvaluateToggleableInput(actionName, inputState)
-    Input.heldKeys[actionName] = (inputState == Enum.UserInputState.Begin) -- true if active, false if not
-
-    -- https://devforum.roblox.com/t/will-firing-server-many-times-a-second-exceed-the-bandwidth-limit/693011
-    -- remotes will automatically drop requests if an exploiter sends too many requests at once. this will probably not affect the server too much like this
-    events.UpdateInputToggle:FireServer(Input.heldKeys)
-
-    return Enum.ContextActionResult.Pass
-end
-
-function EvaluateInput(action, inputState)
-    
-end
-
 --- Public Functions ---
 function Input:Init(context)
      self.context = context
+
+    local function EvaluateToggleableInput(actionName, inputState)
+        self.heldKeys[actionName] = (inputState == Enum.UserInputState.Begin) -- true if active, false if not
+
+        -- https://devforum.roblox.com/t/will-firing-server-many-times-a-second-exceed-the-bandwidth-limit/693011
+        -- remotes will automatically drop requests if an exploiter sends too many requests at once. this will probably not affect the server too much like this
+        events.UpdateInputToggle:FireServer(self.heldKeys)
+
+        return Enum.ContextActionResult.Pass
+    end
+
+    local function EvaluateInput(action, inputState)
+        
+        local clientCharacter = client.Character
+        if clientCharacter == nil or clientCharacter:FindFirstChild("Humanoid") == nil or clientCharacter:FindFirstChild("HumanoidRootPart") == nil then return end
+
+        -- local check for busy and endlag
+        if clientCharacter:GetAttribute("Endlag") == true or 
+            clientCharacter:GetAttribute("Busy") == true or 
+                (self.heldKeys.m1 and clientCharacter:GetAttribute("CanM1") == true) then 
+                    return 
+        end
+
+        print("can dash")
+    end
 
      -- hook some stuff for the input loop for now
      cas:BindAction(`m1`, EvaluateToggleableInput, false, Enum.UserInputType.MouseButton1)
